@@ -1,11 +1,15 @@
 name: Send clean reminder texts
 
+# The schedule trigger is intentionally commented out until the app is
+# actually deployed and APP_URL / CRON_SECRET are set as repo secrets
+# (see README.md). Uncomment it once both of those are true — until then
+# it just fails every few minutes and spams your email.
 on:
-  schedule:
-    # Runs every 5 minutes. GitHub may delay this by a few minutes under
-    # load, which is fine — the endpoint only sends one reminder per job
-    # per day no matter how many times it's hit.
-    - cron: "*/5 * * * *"
+  # schedule:
+  #   # Runs every 5 minutes. GitHub may delay this by a few minutes under
+  #   # load, which is fine — the endpoint only sends one reminder per job
+  #   # per day no matter how many times it's hit.
+  #   - cron: "*/5 * * * *"
   workflow_dispatch: {}
 
 jobs:

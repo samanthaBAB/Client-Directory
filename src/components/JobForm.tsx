@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ClientEmployee, ClientJob, SERVICE_TYPES } from "@/lib/types";
+import { describeRecurrence, ORDINAL_OPTIONS, WEEKDAY_LABELS, WEEKDAY_SHORT } from "@/lib/recurrence";
+import { todayStr } from "@/lib/time";
 
 export interface JobFormValues {
   customer: string;
@@ -14,6 +16,10 @@ export interface JobFormValues {
   payout: string;
   phone: string;
   schedule: string;
+  recurrenceType: string;
+  recurrenceDays: number[];
+  recurrenceOrdinals: number[];
+  recurrenceAnchor: string;
   startTime: string;
   endTime: string;
   sameDayCheckIn: boolean;
@@ -38,6 +44,10 @@ function blankValues(job: ClientJob | null): JobFormValues {
     payout: job?.payout ?? "",
     phone: job?.phone ?? "",
     schedule: job?.schedule ?? "",
+    recurrenceType: job?.recurrenceType ?? "",
+    recurrenceDays: job?.recurrenceDays ?? [],
+    recurrenceOrdinals: job?.recurrenceOrdinals ?? [],
+    recurrenceAnchor: job?.recurrenceAnchor ?? "",
     startTime: job?.startTime ?? "",
     endTime: job?.endTime ?? "",
     sameDayCheckIn: job?.sameDayCheckIn ?? false,
@@ -70,6 +80,24 @@ export default function JobForm({
     setValues((v) => ({ ...v, [key]: value }));
   }
 
+  function toggleDay(day: number) {
+    setValues((v) => ({
+      ...v,
+      recurrenceDays: v.recurrenceDays.includes(day)
+        ? v.recurrenceDays.filter((d) => d !== day)
+        : [...v.recurrenceDays, day],
+    }));
+  }
+
+  function toggleOrdinal(ord: number) {
+    setValues((v) => ({
+      ...v,
+      recurrenceOrdinals: v.recurrenceOrdinals.includes(ord)
+        ? v.recurrenceOrdinals.filter((o) => o !== ord)
+        : [...v.recurrenceOrdinals, ord],
+    }));
+  }
+
   async function handleSave() {
     if (!values.customer.trim()) {
       setError("Please enter a customer name.");
@@ -78,7 +106,7 @@ export default function JobForm({
     setError("");
     setSaving(true);
     try {
-      await onSave(values);
+      await onSave({ ...values, schedule: describeRecurrence(values) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save this job.");
     } finally {
@@ -126,9 +154,83 @@ export default function JobForm({
         Only the payout is ever shown to the cleaner &mdash; the price above stays private to you.
       </div>
       <div className="field">
-        <label>Days / recurrence (optional)</label>
-        <input type="text" placeholder="e.g. 1st & 3rd Thursday, or Mon/Wed/Fri" value={values.schedule} onChange={(e) => set("schedule", e.target.value)} />
+        <label>How often does this job repeat? (optional &mdash; needed for it to show on the Calendar)</label>
+        <select
+          value={values.recurrenceType}
+          onChange={(e) => set("recurrenceType", e.target.value)}
+        >
+          <option value="">Not scheduled / one-off, no set day</option>
+          <option value="ONCE">One-time, on a specific date</option>
+          <option value="WEEKLY">Every week, on certain day(s)</option>
+          <option value="BIWEEKLY">Every other week, on certain day(s)</option>
+          <option value="MONTHLY_NTH">Certain week(s) of the month (e.g. 1st &amp; 3rd Thursday)</option>
+        </select>
       </div>
+
+      {values.recurrenceType === "ONCE" && (
+        <div className="field">
+          <label>Date</label>
+          <input type="date" value={values.recurrenceAnchor} onChange={(e) => set("recurrenceAnchor", e.target.value)} />
+        </div>
+      )}
+
+      {(values.recurrenceType === "WEEKLY" || values.recurrenceType === "BIWEEKLY") && (
+        <>
+          <div className="field">
+            <label>Which day(s)?</label>
+            <div className="check-row" style={{ flexWrap: "wrap", gap: 10 }}>
+              {WEEKDAY_SHORT.map((label, i) => (
+                <label key={i} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}>
+                  <input type="checkbox" checked={values.recurrenceDays.includes(i)} onChange={() => toggleDay(i)} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+          {values.recurrenceType === "BIWEEKLY" && (
+            <div className="field">
+              <label>Starting the week of</label>
+              <input
+                type="date"
+                value={values.recurrenceAnchor || todayStr()}
+                onChange={(e) => set("recurrenceAnchor", e.target.value)}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {values.recurrenceType === "MONTHLY_NTH" && (
+        <>
+          <div className="field">
+            <label>Which week(s) of the month?</label>
+            <div className="check-row" style={{ flexWrap: "wrap", gap: 10 }}>
+              {ORDINAL_OPTIONS.map((ord) => (
+                <label key={ord} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}>
+                  <input type="checkbox" checked={values.recurrenceOrdinals.includes(ord)} onChange={() => toggleOrdinal(ord)} />
+                  {ord === -1 ? "Last" : `${ord}${ord === 1 ? "st" : ord === 2 ? "nd" : ord === 3 ? "rd" : "th"}`}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label>Which day of the week?</label>
+            <select
+              value={values.recurrenceDays[0] ?? ""}
+              onChange={(e) => set("recurrenceDays", e.target.value === "" ? [] : [Number(e.target.value)])}
+            >
+              <option value="">Select a day</option>
+              {WEEKDAY_LABELS.map((label, i) => <option key={i} value={i}>{label}</option>)}
+            </select>
+          </div>
+        </>
+      )}
+
+      {values.recurrenceType && (
+        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "-4px 0 10px" }}>
+          Will show on the calendar as: <b>{describeRecurrence(values) || "(pick the options above)"}</b>
+        </p>
+      )}
       <div className="grid2">
         <div className="field"><label>Start time</label><input type="time" value={values.startTime} onChange={(e) => set("startTime", e.target.value)} /></div>
         <div className="field"><label>End time</label><input type="time" value={values.endTime} onChange={(e) => set("endTime", e.target.value)} /></div>

@@ -42,6 +42,10 @@ export interface ClientJob {
   payout: string | null;
   phone: string | null;
   schedule: string | null;
+  recurrenceType: string | null;
+  recurrenceDays: number[];
+  recurrenceOrdinals: number[];
+  recurrenceAnchor: string | null;
   startTime: string | null;
   endTime: string | null;
   sameDayCheckIn: boolean;

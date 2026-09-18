@@ -18,9 +18,10 @@ import JobForm, { JobFormValues } from "./JobForm";
 import JobCard, { compressToLimit } from "./JobCard";
 import EmployeesPanel from "./EmployeesPanel";
 import Calendar from "./Calendar";
+import MonthCalendar from "./MonthCalendar";
 import { Lightbox, ModalProvider } from "./Modal";
 
-type Tab = "jobs" | "employees" | "myjobs" | "mycal";
+type Tab = "calendar" | "jobs" | "employees" | "myjobs" | "mycal";
 
 async function api(path: string, options?: RequestInit) {
   const res = await fetch(path, {
@@ -65,7 +66,7 @@ function DashboardInner({
 }) {
   const owner = isOwnerLevelRole(user.role);
 
-  const [tab, setTab] = useState<Tab>(owner ? "jobs" : "myjobs");
+  const [tab, setTab] = useState<Tab>("calendar");
   const [jobs, setJobs] = useState<ClientJob[]>(initialJobs);
   const [employees, setEmployees] = useState<ClientEmployee[]>(initialEmployees);
   const [visits, setVisits] = useState<ClientVisit[]>([]);
@@ -279,9 +280,31 @@ function DashboardInner({
       {owner ? (
         <>
           <div className="tabs">
+            <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
             <button className={`tab-btn ${tab === "jobs" ? "active" : ""}`} onClick={() => setTab("jobs")}>Jobs</button>
             <button className={`tab-btn ${tab === "employees" ? "active" : ""}`} onClick={() => setTab("employees")}>Employees</button>
           </div>
+
+          {tab === "calendar" && (
+            <MonthCalendar
+              jobs={jobs}
+              renderJob={(job) => (
+                <JobCard
+                  job={job}
+                  mode="owner"
+                  employees={employees}
+                  photos={photosByJob[job.id] || []}
+                  recentVisits={[]}
+                  onAssign={(empId) => handleAssign(job.id, empId)}
+                  onEdit={() => { setEditingJob(job); setShowJobForm(true); setTab("jobs"); }}
+                  onDelete={() => handleDeleteJob(job.id)}
+                  onUploadPhotos={(files) => handleUploadPhotos(job.id, files)}
+                  onDeletePhoto={(photoId) => handleDeletePhoto(job.id, photoId)}
+                  onViewPhoto={setLightboxSrc}
+                />
+              )}
+            />
+          )}
 
           {tab === "jobs" && (
             <div>
@@ -357,9 +380,37 @@ function DashboardInner({
       ) : (
         <>
           <div className="tabs">
+            <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
             <button className={`tab-btn ${tab === "myjobs" ? "active" : ""}`} onClick={() => setTab("myjobs")}>My Jobs</button>
-            <button className={`tab-btn ${tab === "mycal" ? "active" : ""}`} onClick={() => setTab("mycal")}>My Calendar</button>
+            <button className={`tab-btn ${tab === "mycal" ? "active" : ""}`} onClick={() => setTab("mycal")}>Visit Log</button>
           </div>
+
+          {tab === "calendar" && (
+            <MonthCalendar
+              jobs={myJobs}
+              renderJob={(job) => (
+                <JobCard
+                  job={job}
+                  mode="employee"
+                  employees={employees}
+                  photos={photosByJob[job.id] || []}
+                  activeVisit={activeVisitForJob(job.id)}
+                  recentVisits={recentVisitsForJob(job.id)}
+                  onStartJob={() => handleStartJob(job)}
+                  onEndJob={(note) => {
+                    const active = activeVisitForJob(job.id);
+                    return active ? handleEndJob(active, note) : Promise.resolve();
+                  }}
+                  onLogPastVisit={(date, note) => handleLogPastVisit(job, date, note)}
+                  onSaveNote={(fields) => handleSaveNote(job, fields)}
+                  onUploadPhotos={(files) => handleUploadPhotos(job.id, files)}
+                  onDeletePhoto={(photoId) => handleDeletePhoto(job.id, photoId)}
+                  onViewPhoto={setLightboxSrc}
+                  onRespond={(decision) => handleRespondToOffer(job, decision)}
+                />
+              )}
+            />
+          )}
 
           {tab === "myjobs" && (
             <>

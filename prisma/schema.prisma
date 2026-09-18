@@ -86,6 +86,14 @@ model Job {
   payout            String?
   phone             String?
   schedule          String?
+  // Structured recurrence, used to compute which calendar days a job falls
+  // on. `schedule` above stays as the auto-generated human-readable text
+  // (e.g. "Every Mon/Wed/Fri") so existing display code doesn't need to
+  // know about recurrence at all.
+  recurrenceType     String?  // "ONCE" | "WEEKLY" | "BIWEEKLY" | "MONTHLY_NTH"
+  recurrenceDays     Int[]    @default([]) // 0=Sun..6=Sat
+  recurrenceOrdinals Int[]    @default([]) // MONTHLY_NTH only: 1-4, or -1 for "last"
+  recurrenceAnchor   String?  // ONCE: the date "YYYY-MM-DD"; BIWEEKLY: any date on an "on" week
   startTime         String?
   endTime           String?
   sameDayCheckIn    Boolean  @default(false)

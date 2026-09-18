@@ -119,9 +119,19 @@ export default function JobCard({
         {job.schedule}{timeLine ? ` · ${timeLine}` : ""}
       </div>
 
-      {job.payout && (
-        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-strong)", marginTop: 6 }}>
-          Payout: {job.payout}
+      {(job.payout || (mode === "owner" && job.price)) && (
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6 }}>
+          {mode === "owner" && job.price && (
+            <div style={{ fontSize: 15, color: "var(--text-secondary)" }}>
+              Price: <span style={{ fontWeight: 700, color: "var(--text)" }}>{job.price}</span>
+              <span style={{ fontSize: 12, color: "var(--text-muted)" }}> (client &mdash; not shown to cleaner)</span>
+            </div>
+          )}
+          {job.payout && (
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-strong)" }}>
+              Payout: {job.payout}
+            </div>
+          )}
         </div>
       )}
 

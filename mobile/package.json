@@ -1,0 +1,28 @@
+{
+  "name": "bab-tasker-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capacitor native shell that wraps the deployed BAB Tasker web app for iOS/Android app store submission.",
+  "scripts": {
+    "assets": "capacitor-assets generate",
+    "add:ios": "cap add ios",
+    "add:android": "cap add android",
+    "sync": "cap sync",
+    "open:ios": "cap open ios",
+    "open:android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/camera": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.0",
+    "@capacitor/cli": "^8.0.0"
+  }
+}

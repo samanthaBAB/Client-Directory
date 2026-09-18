@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EMPLOYEE
+}
+
+enum VisitStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  mustChangePw Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignedJobs Job[]     @relation("AssignedJobs")
+  visits       Visit[]
+
+  @@map("users")
+}
+
+model Job {
+  id                String   @id @default(cuid())
+  customer          String
+  property          String?
+  serviceType       String?
+  address           String?
+  city              String?
+  state             String?
+  price             String?
+  phone             String?
+  schedule          String?
+  startTime         String?
+  endTime           String?
+  sameDayCheckIn    Boolean  @default(false)
+  accessCode        String?
+  keyLocation       String?
+  suppliesLocation  String?
+  ownerNote         String?
+  damageNote        String?
+  notes             String?
+  assignedToId      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  assignedTo   User?          @relation("AssignedJobs", fields: [assignedToId], references: [id], onDelete: SetNull)
+  photos       Photo[]
+  visits       Visit[]
+  reminders    JobReminder[]
+
+  @@map("jobs")
+}
+
+model Photo {
+  id         String   @id @default(cuid())
+  jobId      String
+  dataUrl    String   @db.Text
+  uploadedAt DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("photos")
+}
+
+model Visit {
+  id             String      @id @default(cuid())
+  jobId          String?
+  jobLabel       String
+  employeeId     String
+  date           String
+  status         VisitStatus @default(IN_PROGRESS)
+  startedAt      DateTime?
+  endedAt        DateTime?
+  note           String?
+  sameDayCheckIn Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+
+  job      Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  employee User @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("visits")
+}
+
+// Tracks whether a "time for your clean" reminder text has already gone out
+// for a given job on a given day, so the cron sweep never double-texts.
+model JobReminder {
+  id       String   @id @default(cuid())
+  jobId    String
+  date     String
+  sentAt   DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, date])
+  @@map("job_reminders")
+}

@@ -1,0 +1,19 @@
+name: Send clean reminder texts
+
+on:
+  schedule:
+    # Runs every 5 minutes. GitHub may delay this by a few minutes under
+    # load, which is fine — the endpoint only sends one reminder per job
+    # per day no matter how many times it's hit.
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reminder sweep endpoint
+        run: |
+          curl -sS -X POST "${{ secrets.APP_URL }}/api/cron/reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail-with-body

@@ -268,6 +268,8 @@ function DashboardInner({
             Viewing as <b>{owner && user.role === "OWNER" ? "Owner" : user.name}</b>
             {user.role === "ADMIN" && " (Administrator)"}
           </div>
+          <Link className="link-btn" href="/account">Account settings</Link>
+          {" · "}
           <Link className="link-btn" href="/change-password">Change password</Link>
           {" · "}
           <button className="link-btn" onClick={() => signOut({ redirectTo: "/login" })}>Sign out</button>

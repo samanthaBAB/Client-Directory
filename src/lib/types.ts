@@ -39,6 +39,7 @@ export interface ClientJob {
   city: string | null;
   state: string | null;
   price: string | null;
+  payout: string | null;
   phone: string | null;
   schedule: string | null;
   startTime: string | null;

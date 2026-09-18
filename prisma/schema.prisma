@@ -83,6 +83,7 @@ model Job {
   city              String?
   state             String?
   price             String?
+  payout            String?
   phone             String?
   schedule          String?
   startTime         String?

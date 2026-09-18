@@ -119,6 +119,12 @@ export default function JobCard({
         {job.schedule}{timeLine ? ` · ${timeLine}` : ""}
       </div>
 
+      {job.payout && (
+        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-strong)", marginTop: 6 }}>
+          Payout: {job.payout}
+        </div>
+      )}
+
       {(job.accessCode || job.keyLocation || job.suppliesLocation) && (
         <div className="str-box">
           {job.accessCode && <div><b>Access code:</b> {job.accessCode}</div>}

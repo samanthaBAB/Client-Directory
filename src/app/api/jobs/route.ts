@@ -9,11 +9,12 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.organizationId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const where = isOwnerLevel(session.user.role)
+  const owner = isOwnerLevel(session.user.role);
+  const where = owner
     ? { organizationId: session.user.organizationId }
     : { organizationId: session.user.organizationId, assignedToId: session.user.id };
   const jobs = await prisma.job.findMany({ where, orderBy: { createdAt: "asc" } });
-  return NextResponse.json(jobs.map(serializeJob));
+  return NextResponse.json(jobs.map((j) => serializeJob(j, { includePrice: owner })));
 }
 
 export async function POST(req: NextRequest) {
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
       city: body.city?.trim() || null,
       state: body.state?.trim() || null,
       price: body.price?.trim() || null,
+      payout: body.payout?.trim() || null,
       phone: body.phone?.trim() || null,
       schedule: body.schedule?.trim() || null,
       startTime: body.startTime || null,
@@ -75,7 +77,8 @@ export async function POST(req: NextRequest) {
     const employee = await prisma.user.findUnique({ where: { id: job.assignedToId } });
     if (employee) {
       const label = job.property || [job.address, job.city, job.state].filter(Boolean).join(", ") || "a job";
-      await sendSms(employee.phone, `BAB Tasker: You have a new job offer — ${label}. Open the app to accept or decline.`);
+      const payoutLine = job.payout ? ` Pay: ${job.payout}.` : "";
+      await sendSms(employee.phone, `BAB Tasker: You have a new job offer — ${label}.${payoutLine} Open the app to accept or decline.`);
     }
   }
 

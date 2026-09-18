@@ -11,7 +11,13 @@ export function serializeUser(u: User) {
   };
 }
 
-export function serializeJob(j: Job & { assignedTo?: User | null }) {
+// `includePrice` controls whether the customer's price is in the payload
+// at all — not just whether the UI renders it. Cleaners must never see
+// what the client is charged, only their own payout, so every route that
+// serves a cleaner (not an owner/admin) passes includePrice: false. This
+// has to happen server-side: hiding it only in the UI would still leak it
+// through the raw API response (e.g. browser dev tools).
+export function serializeJob(j: Job & { assignedTo?: User | null }, opts: { includePrice: boolean } = { includePrice: true }) {
   return {
     id: j.id,
     customer: j.customer,
@@ -20,7 +26,8 @@ export function serializeJob(j: Job & { assignedTo?: User | null }) {
     address: j.address,
     city: j.city,
     state: j.state,
-    price: j.price,
+    price: opts.includePrice ? j.price : null,
+    payout: j.payout,
     phone: j.phone,
     schedule: j.schedule,
     startTime: j.startTime,

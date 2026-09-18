@@ -34,7 +34,7 @@ export async function POST(
 
   if (decision === "accept") {
     const updated = await prisma.job.update({ where: { id }, data: { assignmentStatus: "ACCEPTED" } });
-    return NextResponse.json(serializeJob(updated));
+    return NextResponse.json(serializeJob(updated, { includePrice: false }));
   }
 
   const updated = await prisma.job.update({
@@ -52,5 +52,5 @@ export async function POST(
     )
   );
 
-  return NextResponse.json(serializeJob(updated));
+  return NextResponse.json(serializeJob(updated, { includePrice: false }));
 }

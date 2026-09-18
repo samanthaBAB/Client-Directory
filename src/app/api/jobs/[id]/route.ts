@@ -13,6 +13,7 @@ const OWNER_EDITABLE_FIELDS = [
   "city",
   "state",
   "price",
+  "payout",
   "phone",
   "schedule",
   "startTime",
@@ -84,11 +85,12 @@ export async function PATCH(
     if (employee) {
       const label =
         updated.property || [updated.address, updated.city, updated.state].filter(Boolean).join(", ") || "a job";
-      await sendSms(employee.phone, `BAB Tasker: You have a new job offer — ${label}. Open the app to accept or decline.`);
+      const payoutLine = updated.payout ? ` Pay: ${updated.payout}.` : "";
+      await sendSms(employee.phone, `BAB Tasker: You have a new job offer — ${label}.${payoutLine} Open the app to accept or decline.`);
     }
   }
 
-  return NextResponse.json(serializeJob(updated));
+  return NextResponse.json(serializeJob(updated, { includePrice: owner }));
 }
 
 export async function DELETE(

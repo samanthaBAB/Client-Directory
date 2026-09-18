@@ -40,7 +40,7 @@ export default async function HomePage() {
         mustChangePw: session.user.mustChangePw,
       }}
       organization={org}
-      initialJobs={jobs.map(serializeJob)}
+      initialJobs={jobs.map((j) => serializeJob(j, { includePrice: owner }))}
       initialEmployees={employees}
     />
   );

@@ -11,6 +11,7 @@ export interface JobFormValues {
   city: string;
   state: string;
   price: string;
+  payout: string;
   phone: string;
   schedule: string;
   startTime: string;
@@ -34,6 +35,7 @@ function blankValues(job: ClientJob | null): JobFormValues {
     city: job?.city ?? "",
     state: job?.state ?? "",
     price: job?.price ?? "",
+    payout: job?.payout ?? "",
     phone: job?.phone ?? "",
     schedule: job?.schedule ?? "",
     startTime: job?.startTime ?? "",
@@ -110,8 +112,18 @@ export default function JobForm({
         <div className="field"><label>State</label><input type="text" value={values.state} onChange={(e) => set("state", e.target.value)} /></div>
       </div>
       <div className="grid2">
-        <div className="field"><label>Price</label><input type="text" placeholder="e.g. $100/clean" value={values.price} onChange={(e) => set("price", e.target.value)} /></div>
+        <div className="field">
+          <label>Price (what the client pays)</label>
+          <input type="text" placeholder="e.g. $100/clean" value={values.price} onChange={(e) => set("price", e.target.value)} />
+        </div>
         <div className="field"><label>Phone</label><input type="tel" value={values.phone} onChange={(e) => set("phone", e.target.value)} /></div>
+      </div>
+      <div className="field">
+        <label>Cleaner payout</label>
+        <input type="text" placeholder="e.g. $80/clean" value={values.payout} onChange={(e) => set("payout", e.target.value)} />
+      </div>
+      <div className="owner-box" style={{ marginTop: -4, marginBottom: 10, fontSize: 13.5 }}>
+        Only the payout is ever shown to the cleaner &mdash; the price above stays private to you.
       </div>
       <div className="field">
         <label>Days / recurrence (optional)</label>

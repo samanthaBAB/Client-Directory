@@ -1,4 +1,20 @@
-export type Role = "OWNER" | "ADMIN" | "EMPLOYEE";
+export type Role = "SUPER_ADMIN" | "OWNER" | "ADMIN" | "EMPLOYEE";
+
+export type OrgStatus = "TRIAL" | "ACTIVE" | "SUSPENDED";
+
+export type AssignmentStatus = "NONE" | "PENDING" | "ACCEPTED";
+
+export interface ClientOrganization {
+  id: string;
+  name: string;
+  propertyLimit: number;
+  monthlyPriceCents: number;
+  status: OrgStatus;
+  notes: string | null;
+  createdAt: number;
+  userCount?: number;
+  jobCount?: number;
+}
 
 export interface ClientUser {
   id: string;
@@ -35,6 +51,7 @@ export interface ClientJob {
   damageNote: string | null;
   notes: string | null;
   assignedTo: string | null;
+  assignmentStatus: AssignmentStatus;
 }
 
 export interface ClientPhoto {

@@ -77,6 +77,8 @@ export default function JobForm({
     setSaving(true);
     try {
       await onSave(values);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save this job.");
     } finally {
       setSaving(false);
     }

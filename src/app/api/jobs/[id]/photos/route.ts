@@ -6,9 +6,9 @@ import { serializePhoto } from "@/lib/serialize";
 
 const MAX_DATA_URL_LENGTH = 1_500_000; // ~1.1MB decoded, generous ceiling for a compressed photo
 
-async function assertAccess(jobId: string, userId: string, owner: boolean) {
+async function assertAccess(jobId: string, userId: string, organizationId: string, owner: boolean) {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
-  if (!job) return null;
+  if (!job || job.organizationId !== organizationId) return null;
   if (!owner && job.assignedToId !== userId) return null;
   return job;
 }
@@ -19,9 +19,9 @@ export async function GET(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.organizationId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const job = await assertAccess(id, session.user.id, isOwnerLevel(session.user.role));
+  const job = await assertAccess(id, session.user.id, session.user.organizationId, isOwnerLevel(session.user.role));
   if (!job) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const photos = await prisma.photo.findMany({ where: { jobId: id }, orderBy: { uploadedAt: "asc" } });
@@ -34,9 +34,9 @@ export async function POST(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.organizationId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const job = await assertAccess(id, session.user.id, isOwnerLevel(session.user.role));
+  const job = await assertAccess(id, session.user.id, session.user.organizationId, isOwnerLevel(session.user.role));
   if (!job) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();

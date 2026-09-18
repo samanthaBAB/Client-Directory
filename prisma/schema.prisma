@@ -25,6 +25,15 @@ enum OrgStatus {
   SUSPENDED
 }
 
+// Assigning a job means offering it — the cleaner must accept before it's
+// really theirs. This keeps the business from directing exactly who does
+// what work, which matters for staying a 1099 relationship rather than W-2.
+enum AssignmentStatus {
+  NONE
+  PENDING
+  ACCEPTED
+}
+
 // One row per cleaning business that has bought the product. SUPER_ADMIN
 // users (the platform's own operator) belong to no organization; every
 // other user and every job belongs to exactly one.
@@ -86,6 +95,7 @@ model Job {
   damageNote        String?
   notes             String?
   assignedToId      String?
+  assignmentStatus  AssignmentStatus @default(NONE)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

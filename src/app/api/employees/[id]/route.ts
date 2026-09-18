@@ -10,8 +10,13 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user || !isOwnerLevel(session.user.role)) {
+  if (!session?.user?.organizationId || !isOwnerLevel(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target || target.organizationId !== session.user.organizationId) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const body = await req.json();
@@ -38,8 +43,13 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user || session.user.role !== "OWNER") {
+  if (!session?.user?.organizationId || session.user.role !== "OWNER") {
     return NextResponse.json({ error: "Only the owner can remove employees" }, { status: 403 });
+  }
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target || target.organizationId !== session.user.organizationId) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   await prisma.user.delete({ where: { id } });

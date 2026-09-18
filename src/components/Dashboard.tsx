@@ -34,8 +34,14 @@ async function api(path: string, options?: RequestInit) {
   return res.status === 204 ? null : res.json();
 }
 
+interface OrgSummary {
+  name: string;
+  propertyLimit: number;
+}
+
 export default function Dashboard(props: {
   user: ClientUser;
+  organization: OrgSummary | null;
   initialJobs: ClientJob[];
   initialEmployees: ClientEmployee[];
 }) {
@@ -48,10 +54,12 @@ export default function Dashboard(props: {
 
 function DashboardInner({
   user,
+  organization,
   initialJobs,
   initialEmployees,
 }: {
   user: ClientUser;
+  organization: OrgSummary | null;
   initialJobs: ClientJob[];
   initialEmployees: ClientEmployee[];
 }) {
@@ -195,6 +203,14 @@ function DashboardInner({
     setVisits((vs) => [visit, ...vs]);
   }
 
+  async function handleRespondToOffer(job: ClientJob, decision: "accept" | "decline") {
+    const updated = await api(`/api/jobs/${job.id}/respond`, {
+      method: "POST",
+      body: JSON.stringify({ decision }),
+    });
+    setJobs((js) => js.map((j) => (j.id === job.id ? updated : j)));
+  }
+
   async function handleSaveNote(job: ClientJob, fields: { ownerNote: string; damageNote: string; notes: string }) {
     const updated = await api(`/api/jobs/${job.id}`, { method: "PATCH", body: JSON.stringify(fields) });
     setJobs((js) => js.map((j) => (j.id === job.id ? updated : j)));
@@ -231,12 +247,19 @@ function DashboardInner({
   if (filterServiceType) ownerJobs = ownerJobs.filter((j) => j.serviceType === filterServiceType);
   ownerJobs = sortJobsChronologically(ownerJobs);
 
-  const myJobs = sortJobsChronologically(jobs.filter((j) => j.assignedTo === user.id));
+  const myAssignedJobs = jobs.filter((j) => j.assignedTo === user.id);
+  const myOffers = sortJobsChronologically(myAssignedJobs.filter((j) => j.assignmentStatus === "PENDING"));
+  const myJobs = sortJobsChronologically(myAssignedJobs.filter((j) => j.assignmentStatus === "ACCEPTED"));
 
   return (
     <div className="wrap">
       <div className="header-row">
         <div>
+          {organization && (
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-strong)", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: ".04em" }}>
+              {organization.name}
+            </p>
+          )}
           <h1>BAB Tasker</h1>
           <p className="sub">Job assignments, access details, and visit history.</p>
         </div>
@@ -260,8 +283,20 @@ function DashboardInner({
 
           {tab === "jobs" && (
             <div>
+              {organization && (
+                <p style={{ fontSize: 13.5, color: "var(--text-muted)", margin: "-6px 0 12px" }}>
+                  {jobs.length} / {organization.propertyLimit} properties on your plan
+                </p>
+              )}
               <div className="toolbar">
-                <button className="btn" onClick={() => { setEditingJob(null); setShowJobForm(true); }}>+ Add Job</button>
+                <button
+                  className="btn"
+                  disabled={!!organization && jobs.length >= organization.propertyLimit}
+                  title={organization && jobs.length >= organization.propertyLimit ? "You've reached your plan's property limit — contact us to upgrade." : undefined}
+                  onClick={() => { setEditingJob(null); setShowJobForm(true); }}
+                >
+                  + Add Job
+                </button>
                 <select value={filterEmployee} onChange={(e) => setFilterEmployee(e.target.value)}>
                   <option value="">All employees</option>
                   <option value="__unassigned">Unassigned</option>
@@ -325,31 +360,52 @@ function DashboardInner({
           </div>
 
           {tab === "myjobs" && (
-            myJobs.length === 0 ? (
-              <div className="empty">No jobs assigned to you yet &mdash; check with the owner.</div>
-            ) : (
-              myJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  mode="employee"
-                  employees={employees}
-                  photos={photosByJob[job.id] || []}
-                  activeVisit={activeVisitForJob(job.id)}
-                  recentVisits={recentVisitsForJob(job.id)}
-                  onStartJob={() => handleStartJob(job)}
-                  onEndJob={(note) => {
-                    const active = activeVisitForJob(job.id);
-                    return active ? handleEndJob(active, note) : Promise.resolve();
-                  }}
-                  onLogPastVisit={(date, note) => handleLogPastVisit(job, date, note)}
-                  onSaveNote={(fields) => handleSaveNote(job, fields)}
-                  onUploadPhotos={(files) => handleUploadPhotos(job.id, files)}
-                  onDeletePhoto={(photoId) => handleDeletePhoto(job.id, photoId)}
-                  onViewPhoto={setLightboxSrc}
-                />
-              ))
-            )
+            <>
+              {myOffers.length > 0 && (
+                <>
+                  <div className="group-title">Job Offers</div>
+                  {myOffers.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      mode="employee"
+                      employees={employees}
+                      photos={photosByJob[job.id] || []}
+                      recentVisits={[]}
+                      onViewPhoto={setLightboxSrc}
+                      onRespond={(decision) => handleRespondToOffer(job, decision)}
+                    />
+                  ))}
+                  <div className="group-title">My Jobs</div>
+                </>
+              )}
+              {myJobs.length === 0 ? (
+                <div className="empty">No jobs assigned to you yet &mdash; check with the owner.</div>
+              ) : (
+                myJobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    mode="employee"
+                    employees={employees}
+                    photos={photosByJob[job.id] || []}
+                    activeVisit={activeVisitForJob(job.id)}
+                    recentVisits={recentVisitsForJob(job.id)}
+                    onStartJob={() => handleStartJob(job)}
+                    onEndJob={(note) => {
+                      const active = activeVisitForJob(job.id);
+                      return active ? handleEndJob(active, note) : Promise.resolve();
+                    }}
+                    onLogPastVisit={(date, note) => handleLogPastVisit(job, date, note)}
+                    onSaveNote={(fields) => handleSaveNote(job, fields)}
+                    onUploadPhotos={(files) => handleUploadPhotos(job.id, files)}
+                    onDeletePhoto={(photoId) => handleDeletePhoto(job.id, photoId)}
+                    onViewPhoto={setLightboxSrc}
+                    onRespond={(decision) => handleRespondToOffer(job, decision)}
+                  />
+                ))
+              )}
+            </>
           )}
 
           {tab === "mycal" && <Calendar visits={visits} />}

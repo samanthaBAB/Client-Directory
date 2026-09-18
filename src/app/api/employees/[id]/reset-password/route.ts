@@ -15,8 +15,13 @@ export async function POST(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user || !isOwnerLevel(session.user.role)) {
+  if (!session?.user?.organizationId || !isOwnerLevel(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target || target.organizationId !== session.user.organizationId) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const tempPassword = generateTempPassword();

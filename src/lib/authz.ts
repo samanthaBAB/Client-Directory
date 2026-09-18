@@ -9,3 +9,7 @@ export async function requireSession() {
 export function isOwnerLevel(role: string) {
   return role === "OWNER" || role === "ADMIN";
 }
+
+export function isSuperAdmin(role: string) {
+  return role === "SUPER_ADMIN";
+}

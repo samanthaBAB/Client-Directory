@@ -24,6 +24,16 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/change-password", req.nextUrl));
   }
 
+  const isSuperAdmin = req.auth?.user.role === "SUPER_ADMIN";
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  if (isLoggedIn && isSuperAdmin && pathname === "/") {
+    return NextResponse.redirect(new URL("/admin", req.nextUrl));
+  }
+  if (isLoggedIn && !isSuperAdmin && isAdminRoute) {
+    return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
+
   return NextResponse.next();
 });
 

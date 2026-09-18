@@ -12,12 +12,12 @@ function generateTempPassword() {
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user || !isOwnerLevel(session.user.role)) {
+  if (!session?.user?.organizationId || !isOwnerLevel(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const employees = await prisma.user.findMany({
-    where: { role: { in: ["EMPLOYEE", "ADMIN"] } },
+    where: { organizationId: session.user.organizationId, role: { in: ["EMPLOYEE", "ADMIN"] } },
     orderBy: { createdAt: "asc" },
     include: { _count: { select: { assignedJobs: true } } },
   });
@@ -29,7 +29,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || !isOwnerLevel(session.user.role)) {
+  if (!session?.user?.organizationId || !isOwnerLevel(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -48,7 +48,12 @@ export async function POST(req: NextRequest) {
   const passwordHash = await bcrypt.hash(tempPassword, 10);
 
   const employee = await prisma.user.create({
-    data: { name, email, phone, passwordHash, role: "EMPLOYEE", mustChangePw: true },
+    data: {
+      name, email, phone, passwordHash,
+      role: "EMPLOYEE",
+      mustChangePw: true,
+      organizationId: session.user.organizationId,
+    },
   });
 
   return NextResponse.json(

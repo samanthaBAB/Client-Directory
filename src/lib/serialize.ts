@@ -1,4 +1,4 @@
-import type { Job, Photo, User, Visit } from "@prisma/client";
+import type { Job, Organization, Photo, User, Visit } from "@prisma/client";
 
 export function serializeUser(u: User) {
   return {
@@ -33,6 +33,21 @@ export function serializeJob(j: Job & { assignedTo?: User | null }) {
     damageNote: j.damageNote,
     notes: j.notes,
     assignedTo: j.assignedToId,
+    assignmentStatus: j.assignmentStatus,
+  };
+}
+
+export function serializeOrganization(o: Organization & { _count?: { users: number; jobs: number } }) {
+  return {
+    id: o.id,
+    name: o.name,
+    propertyLimit: o.propertyLimit,
+    monthlyPriceCents: o.monthlyPriceCents,
+    status: o.status,
+    notes: o.notes,
+    createdAt: o.createdAt.getTime(),
+    userCount: o._count?.users ?? undefined,
+    jobCount: o._count?.jobs ?? undefined,
   };
 }
 

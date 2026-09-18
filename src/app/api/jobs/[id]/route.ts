@@ -35,15 +35,17 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.organizationId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const existing = await prisma.job.findUnique({ where: { id } });
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!existing || existing.organizationId !== session.user.organizationId) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const body = await req.json();
   const owner = isOwnerLevel(session.user.role);
 
-  if (!owner && existing.assignedToId !== session.user.id) {
+  if (!owner && (existing.assignedToId !== session.user.id || existing.assignmentStatus !== "ACCEPTED")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -52,7 +54,19 @@ export async function PATCH(
   for (const field of allowedFields) {
     if (!(field in body)) continue;
     if (field === "assignedTo") {
-      data.assignedToId = body.assignedTo || null;
+      const candidateId: string | null = body.assignedTo || null;
+      let resolvedId: string | null = null;
+      if (candidateId) {
+        const employee = await prisma.user.findUnique({ where: { id: candidateId } });
+        resolvedId = employee && employee.organizationId === session.user.organizationId ? candidateId : null;
+      }
+      data.assignedToId = resolvedId;
+      // Only reset to a fresh offer when who it's assigned to actually
+      // changes — resaving the job form shouldn't re-prompt an employee
+      // who already accepted.
+      if (resolvedId !== existing.assignedToId) {
+        data.assignmentStatus = resolvedId ? "PENDING" : "NONE";
+      }
     } else if (field === "sameDayCheckIn") {
       data.sameDayCheckIn = !!body.sameDayCheckIn;
     } else {
@@ -70,7 +84,7 @@ export async function PATCH(
     if (employee) {
       const label =
         updated.property || [updated.address, updated.city, updated.state].filter(Boolean).join(", ") || "a job";
-      await sendSms(employee.phone, `BAB Tasker: You've been assigned a new job — ${label}. Open the app for details.`);
+      await sendSms(employee.phone, `BAB Tasker: You have a new job offer — ${label}. Open the app to accept or decline.`);
     }
   }
 
@@ -83,8 +97,13 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user || !isOwnerLevel(session.user.role)) {
+  if (!session?.user?.organizationId || !isOwnerLevel(session.user.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const existing = await prisma.job.findUnique({ where: { id } });
+  if (!existing || existing.organizationId !== session.user.organizationId) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   await prisma.job.delete({ where: { id } });

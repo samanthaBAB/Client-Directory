@@ -57,13 +57,14 @@ interface Props {
   onUploadPhotos?: (files: File[]) => Promise<void>;
   onDeletePhoto?: (photoId: string) => Promise<void>;
   onViewPhoto?: (dataUrl: string) => void;
+  onRespond?: (decision: "accept" | "decline") => Promise<void>;
 }
 
 export default function JobCard({
   job, mode, employees, photos, activeVisit, recentVisits,
   onAssign, onEdit, onDelete,
   onStartJob, onEndJob, onLogPastVisit, onSaveNote,
-  onUploadPhotos, onDeletePhoto, onViewPhoto,
+  onUploadPhotos, onDeletePhoto, onViewPhoto, onRespond,
 }: Props) {
   const modal = useModal();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +83,7 @@ export default function JobCard({
   const addrLine = [job.address, job.city, job.state].filter(Boolean).join(", ");
   const primaryLabel = job.property || addrLine || "Unnamed Job";
   const timeLine = job.startTime || job.endTime ? formatTimeRange(job.startTime, job.endTime) : "";
+  const isPendingOffer = mode === "employee" && job.assignmentStatus === "PENDING";
 
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || !fileList.length || !onUploadPhotos) return;
@@ -104,6 +106,12 @@ export default function JobCard({
           {job.sameDayCheckIn && <span className="str-pill" style={{ background: "var(--damage-bg)", color: "var(--damage-text)", border: "1px solid var(--damage-border)" }}>&#9889; Same-Day Check-In</span>}
           {job.damageNote && <span className="str-pill" style={{ background: "var(--damage-bg)", color: "var(--damage-text)", border: "1px solid var(--damage-border)" }}>&#9888; Damage</span>}
           {job.ownerNote && <span className="str-pill" style={{ background: "var(--owner-bg)", color: "var(--owner-text)", border: "1px solid var(--owner-border)" }}>Owner note</span>}
+          {mode === "owner" && job.assignedTo && job.assignmentStatus === "PENDING" && (
+            <span className="str-pill" style={{ background: "var(--str-bg)", color: "var(--str-text)", border: "1px solid var(--str-border)" }}>Awaiting response</span>
+          )}
+          {isPendingOffer && (
+            <span className="str-pill" style={{ background: "var(--str-bg)", color: "var(--str-text)", border: "1px solid var(--str-border)" }}>New Offer</span>
+          )}
         </div>
       </div>
       <div className="job-meta">
@@ -122,34 +130,53 @@ export default function JobCard({
       {job.damageNote && <div className="damage-box"><span className="lbl">Damaged / missing items</span>{job.damageNote}</div>}
       {job.notes && <div className="notes">{job.notes}</div>}
 
-      <div className="photos-section">
-        <div className="photos-label">Job Photos</div>
-        <div className="photo-strip">
-          {photos.map((p) => (
-            <div className="photo-thumb-wrap" key={p.id}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="photo-thumb" src={p.dataUrl} alt="Job" onClick={() => onViewPhoto?.(p.dataUrl)} />
-              <button className="photo-del" title="Delete photo" onClick={async () => {
-                if (await modal.confirm("Delete this photo?")) onDeletePhoto?.(p.id);
-              }}>&times;</button>
-            </div>
-          ))}
-          <button className="photo-add-btn" title="Add photos" disabled={busy} onClick={() => fileInputRef.current?.click()}>+</button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            style={{ display: "none" }}
-            onChange={async (e) => {
-              await handleFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
+      {!isPendingOffer && (
+        <div className="photos-section">
+          <div className="photos-label">Job Photos</div>
+          <div className="photo-strip">
+            {photos.map((p) => (
+              <div className="photo-thumb-wrap" key={p.id}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="photo-thumb" src={p.dataUrl} alt="Job" onClick={() => onViewPhoto?.(p.dataUrl)} />
+                <button className="photo-del" title="Delete photo" onClick={async () => {
+                  if (await modal.confirm("Delete this photo?")) onDeletePhoto?.(p.id);
+                }}>&times;</button>
+              </div>
+            ))}
+            <button className="photo-add-btn" title="Add photos" disabled={busy} onClick={() => fileInputRef.current?.click()}>+</button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={async (e) => {
+                await handleFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {mode === "owner" ? (
+      {isPendingOffer ? (
+        <div className="job-actions" style={{ flexDirection: "column", alignItems: "stretch" }}>
+          <p style={{ margin: "0 0 4px", fontSize: 14.5, color: "var(--text-secondary)" }}>
+            You&apos;ve been offered this job. Take a look at the details above, then accept or decline &mdash; no pressure either way.
+          </p>
+          <div className="job-actions">
+            <button className="btn block" disabled={busy} onClick={async () => {
+              setBusy(true);
+              try { await onRespond?.("accept"); } finally { setBusy(false); }
+            }}>Accept Job</button>
+            <button className="btn secondary block" disabled={busy} onClick={async () => {
+              if (!(await modal.confirm("Decline this job offer? It will go back to unassigned."))) return;
+              setBusy(true);
+              try { await onRespond?.("decline"); } finally { setBusy(false); }
+            }}>Decline</button>
+          </div>
+        </div>
+      ) : mode === "owner" ? (
         <div className="job-actions">
           <select value={job.assignedTo ?? ""} onChange={(e) => onAssign?.(e.target.value)}>
             <option value="">Unassigned</option>

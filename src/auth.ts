@@ -18,11 +18,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = String(credentials?.password ?? "");
         if (!email || !password) return null;
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({
+          where: { email },
+          include: { organization: true },
+        });
         if (!user) return null;
 
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
+
+        // A suspended organization's accounts can't sign in at all.
+        if (user.organization && user.organization.status === "SUSPENDED") return null;
 
         return {
           id: user.id,
@@ -30,6 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           role: user.role,
           mustChangePw: user.mustChangePw,
+          organizationId: user.organizationId,
         };
       },
     }),
@@ -40,6 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = user.role;
         token.mustChangePw = user.mustChangePw;
+        token.organizationId = user.organizationId;
       }
       return token;
     },
@@ -47,6 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = token.id;
       session.user.role = token.role;
       session.user.mustChangePw = token.mustChangePw;
+      session.user.organizationId = token.organizationId;
       return session;
     },
   },

@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  SUPER_ADMIN
   OWNER
   ADMIN
   EMPLOYEE
@@ -18,25 +19,54 @@ enum VisitStatus {
   COMPLETED
 }
 
-model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  phone        String?
-  passwordHash String
-  role         Role     @default(EMPLOYEE)
-  mustChangePw Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+enum OrgStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+}
 
-  assignedJobs Job[]     @relation("AssignedJobs")
+// One row per cleaning business that has bought the product. SUPER_ADMIN
+// users (the platform's own operator) belong to no organization; every
+// other user and every job belongs to exactly one.
+model Organization {
+  id                String    @id @default(cuid())
+  name              String
+  propertyLimit     Int
+  monthlyPriceCents Int
+  status            OrgStatus @default(ACTIVE)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  users User[]
+  jobs  Job[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String        @id @default(cuid())
+  name           String
+  email          String        @unique
+  phone          String?
+  passwordHash   String
+  role           Role          @default(EMPLOYEE)
+  mustChangePw   Boolean       @default(true)
+  organizationId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedJobs Job[]         @relation("AssignedJobs")
   visits       Visit[]
 
+  @@index([organizationId])
   @@map("users")
 }
 
 model Job {
   id                String   @id @default(cuid())
+  organizationId    String
   customer          String
   property          String?
   serviceType       String?
@@ -59,11 +89,13 @@ model Job {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assignedTo   User?          @relation("AssignedJobs", fields: [assignedToId], references: [id], onDelete: SetNull)
   photos       Photo[]
   visits       Visit[]
   reminders    JobReminder[]
 
+  @@index([organizationId])
   @@map("jobs")
 }
 

@@ -248,6 +248,15 @@ function DashboardInner({
   if (filterServiceType) ownerJobs = ownerJobs.filter((j) => j.serviceType === filterServiceType);
   ownerJobs = sortJobsChronologically(ownerJobs);
 
+  // The owner can be a working cleaner too. They're excluded from the
+  // Employees tab (that's for managing other people's accounts), but they
+  // can still be an assignable "who's doing this job" option so their own
+  // self-cleans show up in their calendar and trigger the same SMS
+  // notification path as any other assignee.
+  const assignableUsers = owner
+    ? [...employees, { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, mustChangePw: user.mustChangePw, jobCount: 0 }]
+    : employees;
+
   const myAssignedJobs = jobs.filter((j) => j.assignedTo === user.id);
   const myOffers = sortJobsChronologically(myAssignedJobs.filter((j) => j.assignmentStatus === "PENDING"));
   const myJobs = sortJobsChronologically(myAssignedJobs.filter((j) => j.assignmentStatus === "ACCEPTED"));
@@ -292,7 +301,7 @@ function DashboardInner({
                 <JobCard
                   job={job}
                   mode="owner"
-                  employees={employees}
+                  employees={assignableUsers}
                   photos={photosByJob[job.id] || []}
                   recentVisits={[]}
                   onAssign={(empId) => handleAssign(job.id, empId)}
@@ -325,7 +334,7 @@ function DashboardInner({
                 <select value={filterEmployee} onChange={(e) => setFilterEmployee(e.target.value)}>
                   <option value="">All employees</option>
                   <option value="__unassigned">Unassigned</option>
-                  {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+                  {assignableUsers.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
                 </select>
                 <select value={filterServiceType} onChange={(e) => setFilterServiceType(e.target.value)}>
                   <option value="">All service types</option>
@@ -336,7 +345,7 @@ function DashboardInner({
               {showJobForm && (
                 <JobForm
                   job={editingJob}
-                  employees={employees}
+                  employees={assignableUsers}
                   onSave={handleSaveJob}
                   onCancel={() => { setShowJobForm(false); setEditingJob(null); }}
                 />
@@ -350,7 +359,7 @@ function DashboardInner({
                     key={job.id}
                     job={job}
                     mode="owner"
-                    employees={employees}
+                    employees={assignableUsers}
                     photos={photosByJob[job.id] || []}
                     recentVisits={[]}
                     onAssign={(empId) => handleAssign(job.id, empId)}

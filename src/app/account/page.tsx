@@ -19,11 +19,13 @@ export default async function AccountPage({
   const session = await auth();
   if (!session?.user) redirect("/login");
   const { error } = await searchParams;
+  const currentUser = await prisma.user.findUnique({ where: { id: session.user.id } });
 
   async function updateAccountAction(formData: FormData) {
     "use server";
     const name = String(formData.get("name") ?? "").trim();
     const email = String(formData.get("email") ?? "").toLowerCase().trim();
+    const phone = String(formData.get("phone") ?? "").trim();
     const password = String(formData.get("password") ?? "");
 
     if (!EMAIL_RE.test(email)) redirect("/account?error=invalid");
@@ -42,7 +44,7 @@ export default async function AccountPage({
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { name: name || user.name, email },
+      data: { name: name || user.name, email, phone: phone || null },
     });
 
     await signOut({ redirectTo: "/login" });
@@ -52,7 +54,7 @@ export default async function AccountPage({
     <div className="auth-page">
       <div className="auth-card">
         <h1>Account Settings</h1>
-        <p className="sub">Update your name or login email. You'll be signed out afterward and can log back in with your new email and current password.</p>
+        <p className="sub">Update your name, login email, or phone number. You&apos;ll be signed out afterward and can log back in with your new email and current password.</p>
         {error && <div className="auth-error">{ERROR_MESSAGES[error] ?? "Something went wrong."}</div>}
         <form action={updateAccountAction} className="auth-form">
           <div className="field">
@@ -64,7 +66,11 @@ export default async function AccountPage({
             <input id="email" name="email" type="email" defaultValue={session.user.email ?? ""} required autoComplete="email" />
           </div>
           <div className="field">
-            <label htmlFor="password">Current password (to confirm it's you)</label>
+            <label htmlFor="phone">Phone number (for job text notifications)</label>
+            <input id="phone" name="phone" type="tel" defaultValue={currentUser?.phone ?? ""} autoComplete="tel" />
+          </div>
+          <div className="field">
+            <label htmlFor="password">Current password (to confirm it&apos;s you)</label>
             <input id="password" name="password" type="password" required autoComplete="current-password" />
           </div>
           <button className="btn block" type="submit">Save Changes</button>

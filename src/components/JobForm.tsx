@@ -116,7 +116,7 @@ export default function JobForm({
 
   return (
     <div className="panel">
-      <h3>{job ? "Edit Job" : "Add Job"}</h3>
+      <h3>{job ? "Edit Client" : "Add Client"}</h3>
       <div className="grid2">
         <div className="field">
           <label>Customer name</label>

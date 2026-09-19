@@ -281,7 +281,7 @@ function DashboardInner({
         <>
           <div className="tabs">
             <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
-            <button className={`tab-btn ${tab === "jobs" ? "active" : ""}`} onClick={() => setTab("jobs")}>Jobs</button>
+            <button className={`tab-btn ${tab === "jobs" ? "active" : ""}`} onClick={() => setTab("jobs")}>Clients</button>
             <button className={`tab-btn ${tab === "employees" ? "active" : ""}`} onClick={() => setTab("employees")}>Employees</button>
           </div>
 
@@ -320,7 +320,7 @@ function DashboardInner({
                   title={organization && jobs.length >= organization.propertyLimit ? "You've reached your plan's property limit — contact us to upgrade." : undefined}
                   onClick={() => { setEditingJob(null); setShowJobForm(true); }}
                 >
-                  + Add Job
+                  + Add Client
                 </button>
                 <select value={filterEmployee} onChange={(e) => setFilterEmployee(e.target.value)}>
                   <option value="">All employees</option>
@@ -343,7 +343,7 @@ function DashboardInner({
               )}
 
               {ownerJobs.length === 0 ? (
-                <div className="empty">No jobs yet. Add one above.</div>
+                <div className="empty">No clients yet. Add one above.</div>
               ) : (
                 ownerJobs.map((job) => (
                   <JobCard

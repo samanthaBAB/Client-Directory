@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import { sendPush } from "@/lib/push";
 
 export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
@@ -25,6 +26,18 @@ export async function POST(req: NextRequest) {
         where: { stripePaymentIntentId: pi.id },
         data: { status: "SUCCEEDED" },
       });
+
+      const payment = await prisma.payment.findUnique({
+        where: { stripePaymentIntentId: pi.id },
+        include: { jobRequest: { include: { cleaner: { include: { user: true } } } } },
+      });
+      if (payment?.jobRequest.cleaner) {
+        sendPush(payment.jobRequest.cleaner.user.pushToken, {
+          title: "You got paid",
+          body: `Payment for your ${payment.jobRequest.serviceType.replace("-", " ")} clean cleared — $${(payment.amountCents / 100).toFixed(2)}.`,
+          data: { jobId: payment.jobRequestId },
+        });
+      }
       break;
     }
     case "payment_intent.payment_failed": {

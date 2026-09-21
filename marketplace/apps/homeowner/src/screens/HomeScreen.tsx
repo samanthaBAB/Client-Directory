@@ -1,5 +1,6 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import * as Location from "expo-location";
 import React, { useState } from "react";
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { api, ApiError, Job } from "@/api/client";
@@ -27,6 +28,26 @@ export default function HomeScreen({ navigation }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+
+  async function onUseCurrentLocation() {
+    setLocating(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Location permission needed", "Enable location access to share your home's location with cleaners.");
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({});
+      setCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+      Alert.alert("Location saved", "This helps nearby cleaners see your job first.");
+    } catch {
+      Alert.alert("Couldn't get your location", "Please try again, or continue without it.");
+    } finally {
+      setLocating(false);
+    }
+  }
 
   async function onSubmit() {
     if (!line1.trim() || !city.trim() || !state.trim() || !zip.trim()) {
@@ -42,7 +63,15 @@ export default function HomeScreen({ navigation }: Props) {
     setSubmitting(true);
     try {
       await api.createJob({
-        address: { line1: line1.trim(), line2: line2.trim() || undefined, city: city.trim(), state: state.trim(), zip: zip.trim() },
+        address: {
+          line1: line1.trim(),
+          line2: line2.trim() || undefined,
+          city: city.trim(),
+          state: state.trim(),
+          zip: zip.trim(),
+          lat: coords?.lat,
+          lng: coords?.lng,
+        },
         serviceType,
         scheduledFor: scheduledFor.toISOString(),
         estimatedHours: hours,
@@ -57,6 +86,7 @@ export default function HomeScreen({ navigation }: Props) {
       setState("");
       setZip("");
       setNotes("");
+      setCoords(null);
     } catch (err) {
       Alert.alert("Couldn't request a cleaning", err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -95,6 +125,11 @@ export default function HomeScreen({ navigation }: Props) {
         <TextInput style={[styles.input, { flex: 1 }]} placeholder="State" value={state} onChangeText={setState} />
         <TextInput style={[styles.input, { flex: 1 }]} placeholder="ZIP" keyboardType="number-pad" value={zip} onChangeText={setZip} />
       </View>
+      <Pressable onPress={onUseCurrentLocation} disabled={locating}>
+        <Text style={styles.locationLink}>
+          {locating ? "Getting your location…" : coords ? "✓ Location shared with nearby cleaners" : "Use my current location"}
+        </Text>
+      </Pressable>
 
       <Text style={styles.sectionTitle}>When</Text>
       <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
@@ -140,6 +175,7 @@ const styles = StyleSheet.create({
   topRow: { flexDirection: "row", justifyContent: "flex-end", gap: 20, marginBottom: 16 },
   topLink: { color: "#2E7D32", fontWeight: "600" },
   sectionTitle: { fontSize: 16, fontWeight: "700", marginTop: 20, marginBottom: 10 },
+  locationLink: { color: "#2E7D32", fontWeight: "600", marginBottom: 10 },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",

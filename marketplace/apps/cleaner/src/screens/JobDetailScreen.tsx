@@ -56,6 +56,19 @@ export default function JobDetailScreen({ route, navigation }: Props) {
     }
   }
 
+  async function onStart() {
+    if (!job) return;
+    setBusy(true);
+    try {
+      const updated = await api.startJob(job.id);
+      setJob(updated);
+    } catch (err) {
+      Alert.alert("Couldn't start", err instanceof ApiError ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function onComplete() {
     if (!job) return;
     setBusy(true);
@@ -135,7 +148,13 @@ export default function JobDetailScreen({ route, navigation }: Props) {
         </View>
       )}
 
-      {source === "mine" && (job.status === "ACCEPTED" || job.status === "IN_PROGRESS") && (
+      {source === "mine" && job.status === "ACCEPTED" && (
+        <Pressable style={[styles.button, styles.acceptButton, { marginTop: 24 }]} onPress={onStart} disabled={busy}>
+          <Text style={styles.acceptText}>{busy ? "Saving…" : "Start clean"}</Text>
+        </Pressable>
+      )}
+
+      {source === "mine" && job.status === "IN_PROGRESS" && (
         <Pressable style={[styles.button, styles.acceptButton, { marginTop: 24 }]} onPress={onComplete} disabled={busy}>
           <Text style={styles.acceptText}>{busy ? "Saving…" : "Mark clean complete"}</Text>
         </Pressable>

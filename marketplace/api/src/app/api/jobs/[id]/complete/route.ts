@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthedUser } from "@/lib/auth";
+import { sendPush } from "@/lib/push";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthedUser(req);
@@ -9,7 +10,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   const { id } = await params;
 
-  const job = await prisma.jobRequest.findUnique({ where: { id } });
+  const job = await prisma.jobRequest.findUnique({
+    where: { id },
+    include: { homeowner: { include: { user: true } } },
+  });
   if (!job || job.cleanerId !== user.cleanerProfile.id) {
     return NextResponse.json({ error: "Not your job" }, { status: 403 });
   }
@@ -21,5 +25,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     where: { id },
     data: { status: "COMPLETED" },
   });
+
+  sendPush(job.homeowner.user.pushToken, {
+    title: "Your clean is complete",
+    body: `${user.name} marked your ${job.serviceType.replace("-", " ")} clean as done. Leave a review?`,
+    data: { jobId: job.id },
+  });
+
   return NextResponse.json(updated);
 }

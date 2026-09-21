@@ -41,6 +41,9 @@ export type Me = {
     stripeOnboarded: boolean;
     ratingAvg?: number | null;
     ratingCount: number;
+    baseLat?: number | null;
+    baseLng?: number | null;
+    serviceRadiusMi: number;
   } | null;
 };
 
@@ -93,6 +96,9 @@ export const api = {
 
   me: () => request<Me>("/api/me"),
 
+  registerPushToken: (pushToken: string) =>
+    request<{ ok: true }>("/api/me/push-token", { method: "POST", body: JSON.stringify({ pushToken }) }),
+
   availableJobs: () => request<Job[]>("/api/jobs?scope=available"),
 
   myJobs: () => request<Job[]>("/api/jobs?scope=mine"),
@@ -103,11 +109,16 @@ export const api = {
 
   declineJob: (id: string) => request<{ ok: true }>(`/api/jobs/${id}/decline`, { method: "POST" }),
 
+  startJob: (id: string) => request<Job>(`/api/jobs/${id}/start`, { method: "POST" }),
+
   completeJob: (id: string) => request<Job>(`/api/jobs/${id}/complete`, { method: "POST" }),
 
   stripeOnboardingUrl: () => request<{ url: string }>("/api/stripe/connect/onboard", { method: "POST" }),
 
   stripeStatus: () => request<{ onboarded: boolean }>("/api/stripe/connect/status"),
+
+  updateCleanerProfile: (input: { baseLat?: number; baseLng?: number; serviceRadiusMi?: number }) =>
+    request<{ id: string }>("/api/cleaner-profile", { method: "PATCH", body: JSON.stringify(input) }),
 };
 
 export { ApiError };

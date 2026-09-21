@@ -12,6 +12,8 @@ export type Address = {
   state: string;
   zip: string;
   notes?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 export type JobStatus = "PENDING" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "CANCELED";
@@ -86,6 +88,9 @@ export const api = {
     }),
 
   me: () => request<Me>("/api/me"),
+
+  registerPushToken: (pushToken: string) =>
+    request<{ ok: true }>("/api/me/push-token", { method: "POST", body: JSON.stringify({ pushToken }) }),
 
   createJob: (input: {
     address: Omit<Address, "id">;

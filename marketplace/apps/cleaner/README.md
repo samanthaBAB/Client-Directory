@@ -30,6 +30,22 @@ in-app browser. `app.json`'s `scheme` (`cleanerapp`) is the deep link
 Stripe redirects back to; it must match `STRIPE_CONNECT_RETURN_URL` in the
 backend's environment.
 
+## Push notifications
+
+The app tries to register for push (new jobs, payment cleared)
+automatically after login, but it needs an EAS project ID to do that —
+which doesn't exist until you run `eas build:configure` once (see below).
+Until then, push registration silently no-ops and the app works fine
+without it — you'll just need to pull-to-refresh the job feed.
+
+## Service area
+
+The Payouts tab also has a "Service area" section: tap "use my current
+location" to set your base location from device GPS, and set a radius in
+miles. Your job feed then only shows jobs within that radius — see the
+backend README's "Location-based matching" section for how this works
+without a geocoding API key.
+
 ## Replacing the placeholder icon/splash
 
 `assets/icon.png` and `assets/splash.png` are solid-color placeholders —

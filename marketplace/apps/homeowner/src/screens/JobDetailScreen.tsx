@@ -28,7 +28,20 @@ export default function JobDetailScreen({ route, navigation }: Props) {
     }, [load]),
   );
 
-  async function onCancel() {
+  function onCancel() {
+    if (!job) return;
+    const alreadyPaid = job.payment?.status === "SUCCEEDED";
+    Alert.alert(
+      "Cancel this booking?",
+      alreadyPaid ? "You'll be refunded in full." : "This can't be undone.",
+      [
+        { text: "Never mind", style: "cancel" },
+        { text: "Cancel booking", style: "destructive", onPress: doCancel },
+      ],
+    );
+  }
+
+  async function doCancel() {
     if (!job) return;
     setBusy(true);
     try {

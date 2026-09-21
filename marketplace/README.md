@@ -34,13 +34,20 @@ Cleaner app ────┘                    │
 
 **Posting and filling a job:**
 1. Homeowner posts a job in the Home tab → `POST /api/jobs`, status `PENDING`.
+   Onboarded cleaners get a push notification.
 2. Every cleaner with `stripeOnboarded: true` sees it in their feed
-   (`GET /api/jobs?scope=available`) and can accept (first one wins,
-   race-safe) or decline (hides it from just their own feed).
+   (`GET /api/jobs?scope=available`, filtered to their service radius when
+   both sides have shared a device location) and can accept (first one
+   wins, race-safe, notifies the homeowner) or decline (hides it from just
+   their own feed).
 3. Homeowner pays once it's `ACCEPTED` — Stripe PaymentSheet in the
    homeowner app, money routed to the cleaner's connected Stripe account
-   minus a platform fee.
-4. Cleaner marks it `COMPLETED` after the visit; homeowner can leave a review.
+   minus a platform fee. Cleaner gets notified once it clears.
+4. Cleaner starts the clean (`ACCEPTED` → `IN_PROGRESS`, notifies the
+   homeowner) then marks it `COMPLETED`; homeowner can leave a review.
+
+A homeowner can cancel any time before `COMPLETED` — a paid job is
+refunded in full automatically.
 
 ## Getting a local dev environment running end-to-end
 
@@ -77,29 +84,23 @@ the cleaner to have completed Stripe's test-mode Express onboarding first
 
 ## What's deliberately out of scope for this first pass
 
-- **Geolocation/service-radius matching** — `CleanerProfile` has
-  `serviceRadiusMi`/`baseLat`/`baseLng` fields, but the job feed currently
-  shows every open `PENDING` job to every cleaner rather than filtering by
-  distance. Wire up real geocoding (the address fields are there) before
-  this matters at any real scale.
-- **Push notifications** — a cleaner has to open the app to see a new job;
-  there's no "a job near you just posted" push yet. `@capacitor/push-notifications`
-  isn't relevant here (that's the other app's stack) — for Expo this would be
-  `expo-notifications` + Expo's push service, worth adding once the core
-  flow is validated.
-- **In-progress tracking / live status between ACCEPTED and COMPLETED** —
-  there's no explicit "cleaner started" transition to `IN_PROGRESS` in the
-  UI yet (the schema supports it); add a "Start clean" action next to
-  "Mark complete" if you want homeowners to see that distinction.
-- **Cancellation/refund policy** — a homeowner can cancel a `PENDING` or
-  `ACCEPTED` job, but canceling after payment succeeded doesn't
-  automatically refund via Stripe — that's a deliberate gap, not an
-  oversight, since refund policy (full refund? cutoff time? cleaner
-  compensation for last-minute cancellation?) is a business decision, not
-  a technical one.
+- **Real geocoding of typed addresses** — location matching works off
+  device GPS captured at the moment a cleaner sets their service area or a
+  homeowner posts a job (see each README's "Location" section), not by
+  geocoding the typed street address itself. That's a deliberate choice to
+  avoid needing a Google/Mapbox API key for the MVP; it means a job posted
+  without tapping "use my current location" isn't distance-filterable
+  (it still shows to everyone, just not radius-limited).
+- **Cancellation fee / cutoff window** — cancellation policy right now is
+  "full refund, any time before COMPLETED, no fee." Whether a last-minute
+  cancellation should partially compensate the cleaner for reserved time
+  is a business call worth revisiting once there's real usage, not
+  something to guess at now (`src/app/api/jobs/[id]/cancel/route.ts`).
 - **Admin/ops tooling** — no dashboard for disputes, manual payouts,
   reviewing flagged accounts, etc.
+- **Rich in-app notification history** — notifications are fire-and-forget
+  pushes; there's no in-app notification center/inbox to review past ones.
 
 None of these block getting a working MVP in front of real users; they're
-the natural next slice once the core loop (post → accept → pay → complete
-→ review) is validated.
+the natural next slice once the core loop (post → accept → pay → start →
+complete → review) is validated.

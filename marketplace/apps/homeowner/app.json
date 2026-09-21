@@ -24,9 +24,18 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
-    "plugins": ["@stripe/stripe-react-native"],
+    "plugins": [
+      "@stripe/stripe-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "We use your location to find cleaners near your home and to prefill your address."
+        }
+      ]
+    ],
     "extra": {
       "apiUrl": "https://your-api-domain.com",
       "stripePublishableKey": "pk_test_..."

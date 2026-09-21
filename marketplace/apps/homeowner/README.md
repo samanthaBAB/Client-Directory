@@ -25,6 +25,14 @@ npx expo start
 Scan the QR code with Expo Go (iOS/Android) for quick iteration, or run
 `npm run ios` / `npm run android` with a simulator/emulator.
 
+## Push notifications
+
+The app tries to register for push (job accepted, cleaner started/finished)
+automatically after login, but it needs an EAS project ID to do that —
+which doesn't exist until you run `eas build:configure` once (see below).
+Until then, push registration silently no-ops and the app works fine
+without it — you'll just need to pull-to-refresh to see status changes.
+
 ## Replacing the placeholder icon/splash
 
 `assets/icon.png` and `assets/splash.png` are solid-color placeholders

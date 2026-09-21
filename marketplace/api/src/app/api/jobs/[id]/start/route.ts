@@ -10,29 +10,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   const { id } = await params;
 
-  // Guard against two cleaners accepting the same job at once: only
-  // succeeds if it's still PENDING at the moment of the update.
   const result = await prisma.jobRequest.updateMany({
-    where: { id, status: "PENDING" },
-    data: { cleanerId: user.cleanerProfile.id, status: "ACCEPTED" },
+    where: { id, cleanerId: user.cleanerProfile.id, status: "ACCEPTED" },
+    data: { status: "IN_PROGRESS" },
   });
 
   if (result.count === 0) {
-    return NextResponse.json(
-      { error: "This job is no longer available — someone else already accepted it." },
-      { status: 409 },
-    );
+    return NextResponse.json({ error: "Job isn't accepted yet, or isn't yours" }, { status: 409 });
   }
 
   const job = await prisma.jobRequest.findUnique({
     where: { id },
-    include: { address: true, homeowner: { include: { user: true } } },
+    include: { homeowner: { include: { user: true } } },
   });
 
   if (job) {
     sendPush(job.homeowner.user.pushToken, {
-      title: "A cleaner accepted your job",
-      body: `${user.name} accepted your ${job.serviceType.replace("-", " ")} clean — pay now to confirm.`,
+      title: "Your cleaner has started",
+      body: `${user.name} is cleaning your home now.`,
       data: { jobId: job.id },
     });
   }

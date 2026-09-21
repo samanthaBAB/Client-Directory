@@ -10,7 +10,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "Bookings">;
 const STATUS_LABEL: Record<JobStatus, string> = {
   PENDING: "Waiting for a cleaner",
   ACCEPTED: "Accepted — payment due",
-  IN_PROGRESS: "Cleaner is on the way",
+  IN_PROGRESS: "Cleaning in progress",
   COMPLETED: "Completed",
   CANCELED: "Canceled",
 };

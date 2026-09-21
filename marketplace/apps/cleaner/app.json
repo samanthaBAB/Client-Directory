@@ -15,15 +15,27 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cleanrequest.cleaner"
+      "bundleIdentifier": "com.cleanrequest.cleaner",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We use your location to show you cleaning jobs near you."
+      }
     },
     "android": {
       "package": "com.cleanrequest.cleaner",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "We use your location to show you cleaning jobs near you."
+        }
+      ]
+    ],
     "extra": {
       "apiUrl": "https://your-api-domain.com"
     }

@@ -28,19 +28,28 @@ cleaner can accept it.
 
 1. Homeowner posts a job (`POST /api/jobs`) — address, service type, date,
    estimated hours. Price is computed from a flat platform rate, so
-   homeowners see a price before anyone accepts.
-2. Every onboarded cleaner sees it in their feed (`GET /api/jobs?scope=available`)
-   and can `POST /api/jobs/:id/accept` (first to accept gets it —
-   race-safe via a conditional update) or `POST /api/jobs/:id/decline`
-   (just hides it from their own feed).
+   homeowners see a price before anyone accepts. Every onboarded cleaner
+   with a registered push token gets notified.
+2. Every onboarded cleaner sees it in their feed (`GET /api/jobs?scope=available`,
+   distance-filtered — see Location below) and can `POST /api/jobs/:id/accept`
+   (first to accept gets it — race-safe via a conditional update, and
+   notifies the homeowner) or `POST /api/jobs/:id/decline` (just hides it
+   from their own feed).
 3. Once accepted, the homeowner pays (`POST /api/payments/create-intent`,
    then confirms with Stripe's mobile SDK). Money is held on the platform's
    Stripe account and routed to the cleaner's connected account minus a
    15% platform fee (`application_fee_amount` in
    `src/app/api/payments/create-intent/route.ts` — change
-   `PLATFORM_FEE_BPS` to adjust).
-4. Cleaner marks it done (`POST /api/jobs/:id/complete`).
+   `PLATFORM_FEE_BPS` to adjust). The cleaner gets notified once the
+   payment clears (`payment_intent.succeeded` webhook).
+4. Cleaner starts the clean (`POST /api/jobs/:id/start`, `ACCEPTED` →
+   `IN_PROGRESS`, notifies the homeowner) then marks it done
+   (`POST /api/jobs/:id/complete`, notifies the homeowner).
 5. Homeowner leaves a review (`POST /api/reviews`).
+
+A homeowner can cancel a `PENDING` or `ACCEPTED` job at any point before
+`COMPLETED` (`POST /api/jobs/:id/cancel`) — if it had already been paid,
+this issues a full Stripe refund automatically.
 
 ## Auth
 
@@ -56,6 +65,29 @@ Cleaners must complete Express onboarding
 in the cleaner app) before they can accept jobs that require payment.
 `account.updated` webhooks keep `CleanerProfile.stripeOnboarded` in sync;
 `GET /api/stripe/connect/status` lets the app poll/refresh it directly too.
+
+## Location-based matching
+
+No geocoding API/key involved — `CleanerProfile.baseLat`/`baseLng` is set
+from the cleaner's own device GPS (`PATCH /api/cleaner-profile`), and
+`Address.lat`/`lng` is set from the homeowner's device GPS at the moment
+they post a job (both optional — the "use my current location" button in
+each app). `GET /api/jobs?scope=available` filters to jobs within the
+cleaner's `serviceRadiusMi` (haversine distance, `src/lib/geo.ts`) whenever
+both sides have coordinates; missing either one falls back to showing the
+job/feed unfiltered rather than hiding it.
+
+## Push notifications
+
+Uses Expo's push service (`expo-server-sdk`, `src/lib/push.ts`) — no
+Firebase/APNs setup needed on our side, Expo relays to both platforms.
+Each `User` has an optional `pushToken` set via `POST /api/me/push-token`
+(both apps register on login, once notification permission is granted and
+the app has an EAS project ID — see each app's README). Notifications are
+fire-and-forget (a missing/invalid token, or the push service being down,
+never fails the request that triggered it): new job posted → all onboarded
+cleaners; job accepted/started/completed → the homeowner; payment cleared
+→ the cleaner.
 
 ## Local development
 

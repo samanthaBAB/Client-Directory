@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET ?? "";
 
 export type AuthTokenPayload = {
   sub: string; // user id
-  role: "HOMEOWNER" | "CLEANER";
+  role: "HOMEOWNER" | "CLEANER" | "ADMIN";
 };
 
 export function hashPassword(password: string) {

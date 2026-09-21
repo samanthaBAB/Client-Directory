@@ -82,6 +82,10 @@ with a [Stripe test card](https://docs.stripe.com/testing#cards)
 the cleaner to have completed Stripe's test-mode Express onboarding first
 (the Payouts tab; test mode accepts fake identity/bank details).
 
+For ops/support, seed an admin account (`ADMIN_EMAIL=... ADMIN_PASSWORD=...
+npm run db:seed` from `marketplace/api`) and sign in at `/admin` — see
+`api/README.md`'s "Admin dashboard" section.
+
 ## What's deliberately out of scope for this first pass
 
 - **Real geocoding of typed addresses** — location matching works off
@@ -96,8 +100,6 @@ the cleaner to have completed Stripe's test-mode Express onboarding first
   cancellation should partially compensate the cleaner for reserved time
   is a business call worth revisiting once there's real usage, not
   something to guess at now (`src/app/api/jobs/[id]/cancel/route.ts`).
-- **Admin/ops tooling** — no dashboard for disputes, manual payouts,
-  reviewing flagged accounts, etc.
 - **Rich in-app notification history** — notifications are fire-and-forget
   pushes; there's no in-app notification center/inbox to review past ones.
 

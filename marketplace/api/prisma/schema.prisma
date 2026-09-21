@@ -10,6 +10,7 @@ datasource db {
 enum Role {
   HOMEOWNER
   CLEANER
+  ADMIN
 }
 
 enum JobStatus {

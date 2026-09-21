@@ -11,7 +11,8 @@ cleaner can accept it.
 
 ## Data model
 
-- `User` — one account, `role` is `HOMEOWNER` or `CLEANER`.
+- `User` — one account, `role` is `HOMEOWNER`, `CLEANER`, or `ADMIN`
+  (admin accounts are seeded, not self-registered — see Admin dashboard below).
 - `HomeownerProfile` / `CleanerProfile` — role-specific data, 1:1 with `User`.
 - `Address` — a homeowner's property.
 - `JobRequest` — a posted cleaning job. Lifecycle:
@@ -88,6 +89,26 @@ fire-and-forget (a missing/invalid token, or the push service being down,
 never fails the request that triggered it): new job posted → all onboarded
 cleaners; job accepted/started/completed → the homeowner; payment cleared
 → the cleaner.
+
+## Admin dashboard
+
+`/admin` (served by this same Next.js app, no separate deploy) — sign in
+with an `ADMIN` account to browse all users, filter/browse all jobs, force-cancel
+a non-terminal job with an automatic refund (for disputes or stuck jobs),
+and see every payment. Auth reuses `/api/auth/login`; the dashboard just
+checks the returned role is `ADMIN` and stores the JWT in the browser's
+`localStorage` — fine for small-scale internal tooling, but note that's
+weaker than an httpOnly cookie (vulnerable to XSS reading the token) if
+this ever needs to be hardened for a larger ops team.
+
+There's no admin signup route on purpose. Create one with:
+
+```bash
+ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=... npm run db:seed
+```
+
+(safe to re-run — it upserts by email, so re-running with a new
+`ADMIN_PASSWORD` rotates the password for that same account).
 
 ## Local development
 

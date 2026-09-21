@@ -20,6 +20,8 @@ type AdminUser = {
   email: string;
   phone: string | null;
   role: "HOMEOWNER" | "CLEANER";
+  disabled: boolean;
+  disabledReason: string | null;
   createdAt: string;
   cleaner: {
     stripeOnboarded: boolean;
@@ -255,11 +257,42 @@ function UsersTab({ token }: { token: string }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     apiFetch<AdminUser[]>("/api/admin/users", token)
       .then(setUsers)
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function onDisable(u: AdminUser) {
+    const reason = prompt(`Why are you disabling ${u.name}? (e.g. "Reported no-show on 3/14 booking")`);
+    if (reason === null) return;
+    try {
+      await apiFetch(`/api/admin/users/${u.id}`, token, {
+        method: "PATCH",
+        body: JSON.stringify({ disabled: true, reason: reason || undefined }),
+      });
+      load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Something went wrong");
+    }
+  }
+
+  async function onEnable(u: AdminUser) {
+    if (!confirm(`Re-enable ${u.name}'s account?`)) return;
+    try {
+      await apiFetch(`/api/admin/users/${u.id}`, token, {
+        method: "PATCH",
+        body: JSON.stringify({ disabled: false }),
+      });
+      load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Something went wrong");
+    }
+  }
 
   if (loading) return <p>Loading…</p>;
 
@@ -272,7 +305,9 @@ function UsersTab({ token }: { token: string }) {
           <th style={styles.th}>Role</th>
           <th style={styles.th}>Phone</th>
           <th style={styles.th}>Cleaner status</th>
+          <th style={styles.th}>Account</th>
           <th style={styles.th}>Joined</th>
+          <th style={styles.th}></th>
         </tr>
       </thead>
       <tbody>
@@ -289,7 +324,21 @@ function UsersTab({ token }: { token: string }) {
                   }★ (${u.cleaner.ratingCount}) · ${u.cleaner.serviceRadiusMi}mi`
                 : "—"}
             </td>
+            <td style={styles.td} title={u.disabledReason ?? undefined}>
+              {u.disabled ? "Disabled" : "Active"}
+            </td>
             <td style={styles.td}>{new Date(u.createdAt).toLocaleDateString()}</td>
+            <td style={styles.td}>
+              {u.disabled ? (
+                <button style={styles.linkButton} onClick={() => onEnable(u)}>
+                  Enable
+                </button>
+              ) : (
+                <button style={styles.linkButton} onClick={() => onDisable(u)}>
+                  Disable
+                </button>
+              )}
+            </td>
           </tr>
         ))}
       </tbody>

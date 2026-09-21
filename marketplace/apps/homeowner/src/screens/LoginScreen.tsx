@@ -1,8 +1,12 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Bubbles } from "@/components/Bubbles";
+import { PrimaryButton } from "@/components/PrimaryButton";
+import { Sponge } from "@/components/Sponge";
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
+import { colors, radii } from "@/theme";
 import { RootStackParamList } from "@/navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
@@ -26,12 +30,16 @@ export default function LoginScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <Bubbles style={styles.bubbles} width={375} height={150} />
+      <Sponge size={70} style={styles.sponge} />
+
       <Text style={styles.title}>Suds & Scrub</Text>
       <Text style={styles.subtitle}>Book a trusted cleaner for your home</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor={colors.textMuted}
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
@@ -40,14 +48,13 @@ export default function LoginScreen({ navigation }: Props) {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor={colors.textMuted}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      <Pressable style={styles.button} onPress={onSubmit} disabled={submitting}>
-        <Text style={styles.buttonText}>{submitting ? "Signing in…" : "Sign in"}</Text>
-      </Pressable>
+      <PrimaryButton label="Sign in" onPress={onSubmit} loading={submitting} style={{ marginTop: 8 }} />
 
       <Pressable onPress={() => navigation.navigate("Register")}>
         <Text style={styles.link}>New here? Create an account</Text>
@@ -57,24 +64,20 @@ export default function LoginScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "#fff" },
-  title: { fontSize: 28, fontWeight: "700", textAlign: "center" },
-  subtitle: { fontSize: 14, color: "#666", textAlign: "center", marginTop: 8, marginBottom: 32 },
+  container: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: colors.background },
+  bubbles: { position: "absolute", top: 0, left: 0, right: 0 },
+  sponge: { alignSelf: "center", marginBottom: 12 },
+  title: { fontSize: 28, fontWeight: "700", textAlign: "center", color: colors.text },
+  subtitle: { fontSize: 14, color: colors.textMuted, textAlign: "center", marginTop: 8, marginBottom: 32 },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     padding: 14,
     marginBottom: 12,
     fontSize: 16,
+    color: colors.text,
   },
-  button: {
-    backgroundColor: "#2E7D32",
-    borderRadius: 10,
-    padding: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  link: { color: "#2E7D32", textAlign: "center", marginTop: 20 },
+  link: { color: colors.primary, textAlign: "center", marginTop: 20 },
 });

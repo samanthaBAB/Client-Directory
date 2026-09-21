@@ -2,7 +2,10 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { BubbleLoader } from "@/components/BubbleLoader";
 import { api, Job, JobStatus } from "@/api/client";
+import { serviceLabel } from "@/catalog";
+import { colors, radii } from "@/theme";
 import { RootStackParamList } from "@/navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Bookings">;
@@ -16,16 +19,17 @@ const STATUS_LABEL: Record<JobStatus, string> = {
 };
 
 const STATUS_COLOR: Record<JobStatus, string> = {
-  PENDING: "#B8860B",
-  ACCEPTED: "#2E7D32",
-  IN_PROGRESS: "#1565C0",
-  COMPLETED: "#555",
-  CANCELED: "#B00020",
+  PENDING: "#FFC078",
+  ACCEPTED: colors.primary,
+  IN_PROGRESS: "#74C0FC",
+  COMPLETED: colors.textMuted,
+  CANCELED: colors.danger,
 };
 
 export default function BookingsScreen({ navigation }: Props) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -33,6 +37,7 @@ export default function BookingsScreen({ navigation }: Props) {
       setJobs(await api.myJobs());
     } finally {
       setRefreshing(false);
+      setLoading(false);
     }
   }, []);
 
@@ -42,18 +47,26 @@ export default function BookingsScreen({ navigation }: Props) {
     }, [load]),
   );
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+        <BubbleLoader />
+      </View>
+    );
+  }
+
   return (
     <FlatList
-      style={{ flex: 1, backgroundColor: "#fff" }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={{ padding: 16 }}
       data={jobs}
       keyExtractor={(j) => j.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={colors.primary} />}
       ListEmptyComponent={<Text style={styles.empty}>No bookings yet — request a cleaning from the Home tab.</Text>}
       renderItem={({ item }) => (
         <Pressable style={styles.card} onPress={() => navigation.navigate("JobDetail", { jobId: item.id })}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={styles.cardTitle}>{item.serviceType.replace("-", " ")} clean</Text>
+            <Text style={styles.cardTitle}>{serviceLabel(item.serviceType)}</Text>
             <Text style={[styles.status, { color: STATUS_COLOR[item.status] }]}>{STATUS_LABEL[item.status]}</Text>
           </View>
           <Text style={styles.address}>
@@ -68,17 +81,18 @@ export default function BookingsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  empty: { textAlign: "center", color: "#888", marginTop: 40 },
+  empty: { textAlign: "center", color: colors.textMuted, marginTop: 40 },
   card: {
     borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 12,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     padding: 16,
     marginBottom: 12,
   },
-  cardTitle: { fontSize: 16, fontWeight: "700", textTransform: "capitalize" },
+  cardTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
   status: { fontSize: 12, fontWeight: "700" },
-  address: { color: "#444", marginTop: 6 },
-  meta: { color: "#888", marginTop: 2, fontSize: 13 },
-  price: { marginTop: 8, fontWeight: "700" },
+  address: { color: colors.textMuted, marginTop: 6 },
+  meta: { color: colors.textMuted, marginTop: 2, fontSize: 13 },
+  price: { marginTop: 8, fontWeight: "700", color: colors.primary },
 });

@@ -1,8 +1,12 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useStripe } from "@stripe/stripe-react-native";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
+import { BubbleLoader } from "@/components/BubbleLoader";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { api, ApiError } from "@/api/client";
+import { serviceLabel } from "@/catalog";
+import { colors } from "@/theme";
 import { RootStackParamList } from "@/navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Payment">;
@@ -55,24 +59,20 @@ export default function PaymentScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{job.serviceType.replace("-", " ")} clean</Text>
+      <Text style={styles.title}>{serviceLabel(job.serviceType)}</Text>
       <Text style={styles.price}>${(job.priceCents / 100).toFixed(2)}</Text>
 
       {!ready ? (
-        <ActivityIndicator style={{ marginTop: 24 }} />
+        <BubbleLoader />
       ) : (
-        <Pressable style={styles.button} onPress={onPay} disabled={paying}>
-          <Text style={styles.buttonText}>{paying ? "Processing…" : "Pay"}</Text>
-        </Pressable>
+        <PrimaryButton label={paying ? "Processing…" : "Pay"} onPress={onPay} loading={paying} style={{ minWidth: 200 }} />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" },
-  title: { fontSize: 20, fontWeight: "700", textTransform: "capitalize" },
-  price: { fontSize: 40, fontWeight: "800", marginTop: 12, marginBottom: 32 },
-  button: { backgroundColor: "#2E7D32", borderRadius: 10, padding: 16, paddingHorizontal: 48 },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  container: { flex: 1, padding: 24, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
+  title: { fontSize: 20, fontWeight: "700", color: colors.text },
+  price: { fontSize: 40, fontWeight: "800", marginTop: 12, marginBottom: 32, color: colors.primary },
 });

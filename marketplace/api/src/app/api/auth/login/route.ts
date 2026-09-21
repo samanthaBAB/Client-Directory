@@ -19,6 +19,12 @@ export async function POST(req: NextRequest) {
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
   }
+  if (user.disabled) {
+    return NextResponse.json(
+      { error: user.disabledReason ?? "Your account has been disabled. Contact support." },
+      { status: 403 },
+    );
+  }
 
   const token = signAuthToken({ sub: user.id, role: user.role });
 

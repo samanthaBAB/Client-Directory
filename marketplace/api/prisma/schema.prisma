@@ -30,15 +30,22 @@ enum PaymentStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  phone        String?
-  role         Role
-  pushToken    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String
+  name            String
+  phone           String?
+  role            Role
+  pushToken       String?
+  // Account-level enforcement (see CLEANER_POLICIES in src/lib/catalog.ts):
+  // canceling an accepted job within 24h of the scheduled time, or a
+  // reported no-show, disables the account. Checked on every authenticated
+  // request (src/lib/auth.ts), not just at login, so a disable takes
+  // effect immediately even on an already-issued token.
+  disabled        Boolean  @default(false)
+  disabledReason  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   homeownerProfile HomeownerProfile?
   cleanerProfile   CleanerProfile?
@@ -48,10 +55,19 @@ model User {
 }
 
 model HomeownerProfile {
-  id               String  @id @default(cuid())
-  userId           String  @unique
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId String?
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?
+
+  // Paid monthly membership (MONTHLY_SUBSCRIPTION_PRICE_CENTS in
+  // src/lib/catalog.ts): unlimited cleanings that month, each still billed
+  // separately at a 25% discount. subscriptionStatus mirrors Stripe's
+  // subscription status ("active", "past_due", "canceled", etc.) via
+  // webhook (src/app/api/webhooks/stripe/route.ts) — treat "active" as
+  // the only status that actually grants the discount.
+  stripeSubscriptionId String?
+  subscriptionStatus   String?
 
   addresses   Address[]
   jobRequests JobRequest[]
@@ -99,10 +115,24 @@ model JobRequest {
   cleanerId       String?
   cleaner         CleanerProfile? @relation(fields: [cleanerId], references: [id])
 
-  serviceType     String    // e.g. "standard", "deep", "move-out"
+  serviceType     String    // catalog id, e.g. "residential", "deep" — see src/lib/catalog.ts
+  squareFootage   Int       // priced per sq ft — see PRICE_PER_SQFT_CENTS in src/lib/catalog.ts
+  bedroomCount    Int?      // null for "commercial" (sq-ft-only pricing)
+  bathroomCount   Float?    // allows .5 for a half bath; null for "commercial"
+  kitchenCount    Int?      // null for "commercial"
+  extras          String[]  @default([]) // catalog ids of selected add-on tasks — see src/lib/catalog.ts
   scheduledFor    DateTime
-  estimatedHours  Float     @default(2)
+  // priceCents is the final, already-discounted amount actually charged —
+  // discountLabel/discountCents record what was applied and why, computed
+  // once at booking time and never recomputed later (see computeDiscount
+  // in src/lib/catalog.ts). NOTE: the cleaner's payout is 85% of this
+  // (discounted) priceCents, same split as any job — a promo currently
+  // reduces the cleaner's payout proportionally along with the platform's
+  // cut, rather than the platform absorbing it alone. Revisit if that's
+  // not the intent.
   priceCents      Int
+  discountLabel   String?
+  discountCents   Int       @default(0)
   notes           String?
   status          JobStatus @default(PENDING)
 

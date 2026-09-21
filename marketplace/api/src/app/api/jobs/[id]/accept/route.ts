@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthedUser } from "@/lib/auth";
 import { sendPush } from "@/lib/push";
+import { serviceLabel } from "@/lib/catalog";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthedUser(req);
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (job) {
     sendPush(job.homeowner.user.pushToken, {
       title: "A cleaner accepted your job",
-      body: `${user.name} accepted your ${job.serviceType.replace("-", " ")} clean — pay now to confirm.`,
+      body: `${user.name} accepted your ${serviceLabel(job.serviceType)} — pay now to confirm.`,
       data: { jobId: job.id },
     });
   }

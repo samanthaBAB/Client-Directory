@@ -1,8 +1,12 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useAuth } from "@/context/AuthContext";
+import { colors, radii } from "@/theme";
+import { MainTabScreenProps } from "@/navigation";
 
-export default function ProfileScreen() {
+type Props = MainTabScreenProps<"Profile">;
+
+export default function ProfileScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
 
   return (
@@ -20,6 +24,11 @@ export default function ProfileScreen() {
         </>
       )}
 
+      <Pressable style={styles.supportCard} onPress={() => navigation.navigate("Support")}>
+        <Text style={styles.supportTitle}>Support & policies</Text>
+        <Text style={styles.supportBody}>Contact info and account rules — read before you accept a job.</Text>
+      </Pressable>
+
       <Pressable style={styles.button} onPress={logout}>
         <Text style={styles.buttonText}>Sign out</Text>
       </Pressable>
@@ -28,16 +37,26 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: "#fff" },
-  label: { fontSize: 12, color: "#888", textTransform: "uppercase", marginTop: 16 },
-  value: { fontSize: 16, marginTop: 4 },
-  button: {
-    marginTop: 32,
+  container: { flex: 1, padding: 24, backgroundColor: colors.background },
+  label: { fontSize: 12, color: colors.textMuted, textTransform: "uppercase", marginTop: 16 },
+  value: { fontSize: 16, marginTop: 4, color: colors.text },
+  supportCard: {
+    marginTop: 28,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#B00020",
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    padding: 16,
+  },
+  supportTitle: { color: colors.primary, fontWeight: "700", fontSize: 16 },
+  supportBody: { color: colors.textMuted, marginTop: 4 },
+  button: {
+    marginTop: 24,
+    borderWidth: 1.5,
+    borderColor: colors.danger,
+    borderRadius: radii.md,
     padding: 14,
     alignItems: "center",
   },
-  buttonText: { color: "#B00020", fontWeight: "600" },
+  buttonText: { color: colors.danger, fontWeight: "600" },
 });

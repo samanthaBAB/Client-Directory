@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthedUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { sendPush } from "@/lib/push";
+import { serviceLabel } from "@/lib/catalog";
 
 // Same refund-then-cancel behavior as the homeowner-initiated cancel
 // (src/app/api/jobs/[id]/cancel/route.ts), but for support/ops use: no
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const notice = {
     title: "Job canceled",
-    body: `Support canceled the ${job.serviceType.replace("-", " ")} clean scheduled for ${new Date(job.scheduledFor).toLocaleDateString()}.`,
+    body: `Support canceled the ${serviceLabel(job.serviceType)} scheduled for ${new Date(job.scheduledFor).toLocaleDateString()}.`,
     data: { jobId: job.id },
   };
   sendPush(job.homeowner.user.pushToken, notice);

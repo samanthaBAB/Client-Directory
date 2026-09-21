@@ -25,12 +25,23 @@ cleaner can accept it.
   accepted.
 - `Review` — homeowner rates the cleaner after `COMPLETED`.
 
+## Pricing
+
+Flat and itemized, never hourly — see `src/lib/catalog.ts` for the full
+model and reasoning. In short: `(square footage × price/sq ft for the
+service type) + (bedroom/bathroom/kitchen counts × their per-room price)
++ any extras`, minus a first-clean or subscriber discount if either
+applies. A cleaner is paid the same regardless of how long the job
+actually takes, and a homeowner sees the full breakdown before booking —
+never just a total. `commercial` is square-footage-only (no rooms).
+
 ## How a job flows
 
-1. Homeowner posts a job (`POST /api/jobs`) — address, service type, date,
-   estimated hours. Price is computed from a flat platform rate, so
-   homeowners see a price before anyone accepts. Every onboarded cleaner
-   with a registered push token gets notified.
+1. Homeowner posts a job (`POST /api/jobs`) — address, service type,
+   square footage, room counts, any extras. Price is computed and
+   itemized from the catalog (see Pricing above), so homeowners see a
+   full breakdown before anyone accepts. Every onboarded cleaner with a
+   registered push token gets notified.
 2. Every onboarded cleaner sees it in their feed (`GET /api/jobs?scope=available`,
    distance-filtered — see Location below) and can `POST /api/jobs/:id/accept`
    (first to accept gets it — race-safe via a conditional update, and
@@ -90,12 +101,62 @@ never fails the request that triggered it): new job posted → all onboarded
 cleaners; job accepted/started/completed → the homeowner; payment cleared
 → the cleaner.
 
+## Discounts & subscription
+
+Two promotions, both computed in `computeDiscount` (`src/lib/catalog.ts`)
+and applied at booking time in `POST /api/jobs`:
+
+- **First clean, 50% off** — only for `residential` (standard) cleans, and
+  only if this is the homeowner's very first booking of any kind. If their
+  first booking happens to be a different service type, they don't get it
+  later either (it's a one-time intro offer, not a banked credit).
+- **Monthly subscriber, 25% off** — any service type, for as long as
+  `HomeownerProfile.subscriptionStatus` is `"active"` or `"trialing"`
+  (use `isActiveSubscription()`, not a direct string check). $14.99/mo,
+  first month free, unlimited bookings that month each still billed
+  separately at the discount — see `src/app/api/subscription/`. Real
+  Stripe Subscriptions: `POST /api/subscription/start` creates the
+  subscription and returns a SetupIntent client secret during the trial
+  (or a PaymentIntent once billing starts) for the mobile app's
+  PaymentSheet to confirm; `POST /api/subscription/cancel` cancels at
+  period end; the webhook keeps `subscriptionStatus` in sync with Stripe.
+
+**Known simplification, not settled policy**: the discount reduces
+`priceCents` before the 85/15 cleaner/platform split happens, so today a
+promo reduces the cleaner's payout proportionally along with the
+platform's cut rather than being absorbed by the platform alone. Flagged
+in code comments too — revisit if the intent is for cleaners to be fully
+insulated from promotional pricing (would need a separate Charge +
+Transfer flow instead of a single destination charge).
+
+## Cleaner accountability
+
+Policy text lives in `CLEANER_POLICIES` (`src/lib/catalog.ts`), shown in
+the cleaner app's Support screen:
+
+- Canceling an **accepted** job within 24h of its scheduled time disables
+  the account automatically (`POST /api/jobs/:id/cleaner-cancel` — not the
+  same as declining an offer before accepting, which has no consequence).
+  If the job was already paid, canceling refunds the homeowner and closes
+  the job out entirely (money already routed to that cleaner's Stripe
+  account can't be silently reassigned to a different one); if unpaid, the
+  job reopens for another cleaner to accept.
+- No-shows can't be auto-detected (no check-in feature), so they're a
+  human call: an admin disables the account manually from `/admin`
+  (`PATCH /api/admin/users/:id`) after a homeowner reports one.
+
+`User.disabled` is checked both at login and on every authenticated
+request (`getAuthedUser` in `src/lib/auth.ts`), so a disable takes effect
+immediately even on a token issued before it.
+
 ## Admin dashboard
 
 `/admin` (served by this same Next.js app, no separate deploy) — sign in
-with an `ADMIN` account to browse all users, filter/browse all jobs, force-cancel
-a non-terminal job with an automatic refund (for disputes or stuck jobs),
-and see every payment. Auth reuses `/api/auth/login`; the dashboard just
+with an `ADMIN` account to browse all users (and disable/enable an
+account, e.g. for a reported no-show — see Cleaner accountability above),
+filter/browse all jobs, force-cancel a non-terminal job with an automatic
+refund (for disputes or stuck jobs), and see every payment. Auth reuses
+`/api/auth/login`; the dashboard just
 checks the returned role is `ADMIN` and stores the JWT in the browser's
 `localStorage` — fine for small-scale internal tooling, but note that's
 weaker than an httpOnly cookie (vulnerable to XSS reading the token) if
@@ -128,8 +189,18 @@ and put the printed `whsec_...` into `STRIPE_WEBHOOK_SECRET`.
 Same pattern as the root app: Vercel + a managed Postgres (Neon/Supabase).
 Set `DATABASE_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`,
 `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_REFRESH_URL`,
-`STRIPE_CONNECT_RETURN_URL` as environment variables, then point Stripe's
-webhook settings at `https://your-domain.com/api/webhooks/stripe`
-(`payment_intent.succeeded`, `payment_intent.payment_failed`,
-`account.updated`). Both mobile apps' `EXPO_PUBLIC_API_URL` should point
-at this deployed URL.
+`STRIPE_CONNECT_RETURN_URL`, `STRIPE_SUBSCRIPTION_PRICE_ID` (create that
+Price once in the Stripe Dashboard first) as environment variables, then
+point Stripe's webhook settings at
+`https://your-domain.com/api/webhooks/stripe` (`payment_intent.succeeded`,
+`payment_intent.payment_failed`, `account.updated`,
+`customer.subscription.updated`, `customer.subscription.deleted`). Both
+mobile apps' `app.json` → `expo.extra.apiUrl` should point at this
+deployed URL.
+
+**Not yet verified against a real Stripe account** — the Stripe Connect
+payment flow, the webhook handlers, and the subscription/SetupIntent flow
+are all standard, documented Stripe patterns, but this sandbox has no
+live Stripe credentials to actually test against. Budget time to test the
+full payment and subscription flows against Stripe test mode before
+going live.

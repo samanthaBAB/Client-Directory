@@ -45,5 +45,9 @@ export async function getAuthedUser(req: NextRequest) {
     where: { id: payload.sub },
     include: { homeownerProfile: true, cleanerProfile: true },
   });
+  // Re-checked on every request, not just at login, so disabling an
+  // account (see CLEANER_POLICIES in src/lib/catalog.ts) takes effect
+  // immediately even on a token issued before the disable.
+  if (user?.disabled) return null;
   return user;
 }

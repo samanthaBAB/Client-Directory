@@ -4,11 +4,16 @@ import { prisma } from "@/lib/db";
 import { getAuthedUser } from "@/lib/auth";
 import { haversineMiles } from "@/lib/geo";
 import { sendPushToMany } from "@/lib/push";
-
-// Flat platform rate used to price a job before a cleaner is assigned.
-// (A cleaner's own hourlyRateCents only affects what they see they'd earn;
-// keeping the price a homeowner sees stable regardless of who accepts.)
-const PLATFORM_RATE_CENTS_PER_HOUR = 5000;
+import {
+  availableExtras,
+  computeDiscount,
+  isActiveSubscription,
+  isExtraId,
+  isRoomPriced,
+  isServiceTypeId,
+  priceJobCents,
+  serviceLabel,
+} from "@/lib/catalog";
 
 const createSchema = z.object({
   address: z.object({
@@ -25,9 +30,14 @@ const createSchema = z.object({
     lat: z.number().optional(),
     lng: z.number().optional(),
   }),
-  serviceType: z.enum(["standard", "deep", "move-out"]),
+  serviceType: z.string().refine(isServiceTypeId, "Unknown service type"),
+  squareFootage: z.number().int().min(100).max(50000),
+  // Required for every service type except "commercial" (sq-ft-only pricing).
+  bedroomCount: z.number().int().min(0).max(20).optional(),
+  bathroomCount: z.number().min(0).max(20).optional(),
+  kitchenCount: z.number().int().min(0).max(5).optional(),
+  extras: z.array(z.string()).default([]),
   scheduledFor: z.string().datetime(),
-  estimatedHours: z.number().min(0.5).max(12).default(2),
   notes: z.string().optional(),
 });
 
@@ -41,10 +51,29 @@ export async function POST(req: NextRequest) {
   if (!body.success) {
     return NextResponse.json({ error: body.error.flatten() }, { status: 400 });
   }
-  const { address, serviceType, scheduledFor, estimatedHours, notes } = body.data;
+  const { address, serviceType, squareFootage, bedroomCount, bathroomCount, kitchenCount, scheduledFor, notes } = body.data;
+  // Silently drop any unknown extra id, or one already bundled into this
+  // service type's room pricing (e.g. "inside_fridge" on a deep clean —
+  // charging it again would double-bill the same work), rather than
+  // erroring. Keeps this forward-compatible if the catalog changes too.
+  const allowedExtraIds = new Set(availableExtras(serviceType).map((e) => e.id));
+  const extras = body.data.extras.filter(isExtraId).filter((id) => allowedExtraIds.has(id));
 
-  const multiplier = serviceType === "deep" ? 1.5 : serviceType === "move-out" ? 1.75 : 1;
-  const priceCents = Math.round(PLATFORM_RATE_CENTS_PER_HOUR * estimatedHours * multiplier);
+  const roomsRequired = isRoomPriced(serviceType);
+  if (roomsRequired && (bedroomCount == null || bathroomCount == null || kitchenCount == null)) {
+    return NextResponse.json({ error: "Bedroom, bathroom, and kitchen counts are required for this service type" }, { status: 400 });
+  }
+  const rooms = roomsRequired ? { bedroomCount: bedroomCount!, bathroomCount: bathroomCount!, kitchenCount: kitchenCount! } : null;
+
+  const subtotalCents = priceJobCents(serviceType, squareFootage, rooms, extras);
+
+  const priorJobCount = await prisma.jobRequest.count({ where: { homeownerId: user.homeownerProfile.id } });
+  const discount = computeDiscount(subtotalCents, {
+    serviceType,
+    isFirstClean: priorJobCount === 0,
+    isSubscribed: isActiveSubscription(user.homeownerProfile.subscriptionStatus),
+  });
+  const priceCents = subtotalCents - (discount?.amountCents ?? 0);
 
   const createdAddress = await prisma.address.create({
     data: { ...address, homeownerId: user.homeownerProfile.id },
@@ -55,9 +84,15 @@ export async function POST(req: NextRequest) {
       homeownerId: user.homeownerProfile.id,
       addressId: createdAddress.id,
       serviceType,
+      squareFootage,
+      bedroomCount: rooms?.bedroomCount,
+      bathroomCount: rooms?.bathroomCount,
+      kitchenCount: rooms?.kitchenCount,
+      extras,
       scheduledFor: new Date(scheduledFor),
-      estimatedHours,
       priceCents,
+      discountLabel: discount?.label,
+      discountCents: discount?.amountCents ?? 0,
       notes,
     },
     include: { address: true },
@@ -74,7 +109,7 @@ export async function POST(req: NextRequest) {
     cleaners.map((c) => c.user.pushToken),
     {
       title: "New job near you",
-      body: `${serviceType.replace("-", " ")} clean in ${address.city}, ${address.state} — $${(priceCents / 100).toFixed(2)}`,
+      body: `${serviceLabel(serviceType)} in ${address.city}, ${address.state} — $${(priceCents / 100).toFixed(2)}`,
       data: { jobId: job.id },
     },
   );

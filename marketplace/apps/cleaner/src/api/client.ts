@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { ServiceTypeId } from "@/catalog";
 
 const API_URL = (Constants.expoConfig?.extra?.apiUrl as string) ?? "http://localhost:3000";
 
@@ -18,9 +19,13 @@ export type JobStatus = "PENDING" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "
 
 export type Job = {
   id: string;
-  serviceType: "standard" | "deep" | "move-out";
+  serviceType: ServiceTypeId;
+  squareFootage: number;
+  bedroomCount: number | null;
+  bathroomCount: number | null;
+  kitchenCount: number | null;
+  extras: string[];
   scheduledFor: string;
-  estimatedHours: number;
   priceCents: number;
   notes?: string | null;
   status: JobStatus;
@@ -112,6 +117,11 @@ export const api = {
   startJob: (id: string) => request<Job>(`/api/jobs/${id}/start`, { method: "POST" }),
 
   completeJob: (id: string) => request<Job>(`/api/jobs/${id}/complete`, { method: "POST" }),
+
+  cleanerCancelJob: (id: string) =>
+    request<{ ok: true; accountDisabled: boolean; message?: string }>(`/api/jobs/${id}/cleaner-cancel`, {
+      method: "POST",
+    }),
 
   stripeOnboardingUrl: () => request<{ url: string }>("/api/stripe/connect/onboard", { method: "POST" }),
 

@@ -1,8 +1,10 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import React, { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/context/AuthContext";
+import { colors, radii } from "@/theme";
 import { RootStackParamList } from "@/navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Register">;
@@ -32,10 +34,11 @@ export default function RegisterScreen({}: Props) {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Full name" value={name} onChangeText={setName} />
+      <TextInput style={styles.input} placeholder="Full name" placeholderTextColor={colors.textMuted} value={name} onChangeText={setName} />
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor={colors.textMuted}
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
@@ -44,6 +47,7 @@ export default function RegisterScreen({}: Props) {
       <TextInput
         style={styles.input}
         placeholder="Phone"
+        placeholderTextColor={colors.textMuted}
         keyboardType="phone-pad"
         value={phone}
         onChangeText={setPhone}
@@ -51,39 +55,33 @@ export default function RegisterScreen({}: Props) {
       <TextInput
         style={styles.input}
         placeholder="Password (min. 8 characters)"
+        placeholderTextColor={colors.textMuted}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      <Pressable style={styles.button} onPress={onSubmit} disabled={submitting}>
-        <Text style={styles.buttonText}>{submitting ? "Creating account…" : "Create account"}</Text>
-      </Pressable>
+      <PrimaryButton label="Create account" onPress={onSubmit} loading={submitting} style={{ marginTop: 8 }} />
 
       <Text style={styles.hint}>
-        After signing up, set up payouts from the Payouts tab so you can start accepting jobs.
+        After signing up, set up payouts from the Payouts tab so you can start accepting jobs. By creating an
+        account, you agree to our cancellation & no-show policy (Profile → Support & policies).
       </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: "#fff" },
+  container: { flex: 1, padding: 24, backgroundColor: colors.background },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     padding: 14,
     marginBottom: 12,
     fontSize: 16,
+    color: colors.text,
   },
-  button: {
-    backgroundColor: "#1565C0",
-    borderRadius: 10,
-    padding: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  hint: { color: "#888", fontSize: 13, textAlign: "center", marginTop: 20 },
+  hint: { color: colors.textMuted, fontSize: 13, textAlign: "center", marginTop: 20, lineHeight: 18 },
 });

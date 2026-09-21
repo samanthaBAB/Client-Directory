@@ -33,8 +33,11 @@ Cleaner app ────┘                    │
 ```
 
 **Posting and filling a job:**
-1. Homeowner posts a job in the Home tab → `POST /api/jobs`, status `PENDING`.
-   Onboarded cleaners get a push notification.
+1. Homeowner picks a service type, square footage, room counts, and any
+   extras — the app shows a full itemized price breakdown live, including
+   a first-clean or subscriber discount if either applies (see Pricing
+   below) — then posts it → `POST /api/jobs`, status `PENDING`. Onboarded
+   cleaners get a push notification.
 2. Every cleaner with `stripeOnboarded: true` sees it in their feed
    (`GET /api/jobs?scope=available`, filtered to their service radius when
    both sides have shared a device location) and can accept (first one
@@ -44,10 +47,37 @@ Cleaner app ────┘                    │
    homeowner app, money routed to the cleaner's connected Stripe account
    minus a platform fee. Cleaner gets notified once it clears.
 4. Cleaner starts the clean (`ACCEPTED` → `IN_PROGRESS`, notifies the
-   homeowner) then marks it `COMPLETED`; homeowner can leave a review.
+   homeowner), works through an on-site checklist for deep/move-in/
+   move-out jobs (exactly what's included per room, so nothing's assumed),
+   then marks it `COMPLETED`; homeowner can leave a review.
 
 A homeowner can cancel any time before `COMPLETED` — a paid job is
-refunded in full automatically.
+refunded in full automatically. A cleaner backing out of an accepted job
+within 24h of the scheduled time gets their account disabled (see
+`api/README.md`'s "Cleaner accountability" section).
+
+## Pricing, discounts & the monthly membership
+
+Flat and itemized, never hourly — square footage × a per-service-type
+rate, plus per-room pricing for bedrooms/bathrooms/kitchens, plus any
+extras. New customers get 50% off their first standard clean; $14.99/mo
+subscribers (first month free) get 25% off everything. Full model, the
+reasoning behind the numbers, and the Stripe Subscriptions integration
+are in `api/README.md` — start there before touching any number in
+`api/src/lib/catalog.ts` (mirrored in both apps' `src/catalog.ts`, kept
+in sync by hand — there's no build step enforcing it, so re-copy after
+any change).
+
+## Look and feel
+
+Dark purple (`#241934`) + green (`#2FAE66`) throughout, defined once per
+app in `src/theme.ts`. `src/components/Bubbles.tsx` and `Sponge.tsx` are
+small decorative SVGs used on auth screens; `BubbleLoader.tsx` replaces
+the default spinner everywhere; `PrimaryButton.tsx` is the shared CTA
+button, with a little animated bubble-pop on press. The app icon
+(`marketplace/scripts/make-brand-icon.js`) and both apps' placeholder
+icon/splash art follow the same palette — still programmer art, not real
+design work; swap before shipping.
 
 ## Getting a local dev environment running end-to-end
 

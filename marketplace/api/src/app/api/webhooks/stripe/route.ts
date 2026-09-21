@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { sendPush } from "@/lib/push";
+import { serviceLabel } from "@/lib/catalog";
 
 export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       if (payment?.jobRequest.cleaner) {
         sendPush(payment.jobRequest.cleaner.user.pushToken, {
           title: "You got paid",
-          body: `Payment for your ${payment.jobRequest.serviceType.replace("-", " ")} clean cleared — $${(payment.amountCents / 100).toFixed(2)}.`,
+          body: `Payment for your ${serviceLabel(payment.jobRequest.serviceType)} cleared — $${(payment.amountCents / 100).toFixed(2)}.`,
           data: { jobId: payment.jobRequestId },
         });
       }
@@ -54,6 +55,18 @@ export async function POST(req: NextRequest) {
       await prisma.cleanerProfile.updateMany({
         where: { stripeAccountId: account.id },
         data: { stripeOnboarded: onboarded },
+      });
+      break;
+    }
+    // Keeps HomeownerProfile.subscriptionStatus in sync with Stripe's view
+    // of the world — covers the first payment succeeding, renewals,
+    // failed renewals, and cancel-at-period-end finally taking effect.
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object as Stripe.Subscription;
+      await prisma.homeownerProfile.updateMany({
+        where: { stripeSubscriptionId: subscription.id },
+        data: { subscriptionStatus: subscription.status },
       });
       break;
     }

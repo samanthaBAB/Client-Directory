@@ -21,6 +21,8 @@ export async function GET(req: NextRequest) {
       email: u.email,
       phone: u.phone,
       role: u.role,
+      disabled: u.disabled,
+      disabledReason: u.disabledReason,
       createdAt: u.createdAt,
       cleaner: u.cleanerProfile
         ? {

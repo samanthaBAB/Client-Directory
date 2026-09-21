@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthedUser } from "@/lib/auth";
 import { sendPush } from "@/lib/push";
+import { serviceLabel } from "@/lib/catalog";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthedUser(req);
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   sendPush(job.homeowner.user.pushToken, {
     title: "Your clean is complete",
-    body: `${user.name} marked your ${job.serviceType.replace("-", " ")} clean as done. Leave a review?`,
+    body: `${user.name} marked your ${serviceLabel(job.serviceType)} as done. Leave a review?`,
     data: { jobId: job.id },
   });
 

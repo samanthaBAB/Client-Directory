@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { ServiceTypeId } from "@/catalog";
 
 const API_URL = (Constants.expoConfig?.extra?.apiUrl as string) ?? "http://localhost:3000";
 
@@ -20,10 +21,16 @@ export type JobStatus = "PENDING" | "ACCEPTED" | "IN_PROGRESS" | "COMPLETED" | "
 
 export type Job = {
   id: string;
-  serviceType: "standard" | "deep" | "move-out";
+  serviceType: ServiceTypeId;
+  squareFootage: number;
+  bedroomCount: number | null;
+  bathroomCount: number | null;
+  kitchenCount: number | null;
+  extras: string[];
   scheduledFor: string;
-  estimatedHours: number;
   priceCents: number;
+  discountLabel?: string | null;
+  discountCents: number;
   notes?: string | null;
   status: JobStatus;
   address: Address;
@@ -37,7 +44,12 @@ export type Me = {
   name: string;
   phone?: string | null;
   role: Role;
-  homeownerProfile?: { id: string; stripeCustomerId?: string | null } | null;
+  homeownerProfile?: {
+    id: string;
+    stripeCustomerId?: string | null;
+    subscriptionStatus?: string | null;
+    hasBookedBefore?: boolean;
+  } | null;
 };
 
 class ApiError extends Error {
@@ -94,9 +106,13 @@ export const api = {
 
   createJob: (input: {
     address: Omit<Address, "id">;
-    serviceType: Job["serviceType"];
+    serviceType: ServiceTypeId;
+    squareFootage: number;
+    bedroomCount?: number;
+    bathroomCount?: number;
+    kitchenCount?: number;
+    extras: string[];
     scheduledFor: string;
-    estimatedHours: number;
     notes?: string;
   }) => request<Job>("/api/jobs", { method: "POST", body: JSON.stringify(input) }),
 
@@ -114,6 +130,12 @@ export const api = {
 
   leaveReview: (input: { jobRequestId: string; rating: number; comment?: string }) =>
     request<{ id: string }>("/api/reviews", { method: "POST", body: JSON.stringify(input) }),
+
+  startSubscription: () =>
+    request<{ clientSecret: string; mode: "setup" | "payment" }>("/api/subscription/start", { method: "POST" }),
+
+  cancelSubscription: () =>
+    request<{ status: string; cancelAtPeriodEnd: boolean }>("/api/subscription/cancel", { method: "POST" }),
 };
 
 export { ApiError };

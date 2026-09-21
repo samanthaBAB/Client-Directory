@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthedUser } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { sendPush } from "@/lib/push";
+import { serviceLabel } from "@/lib/catalog";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthedUser(req);
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (job.cleaner) {
     sendPush(job.cleaner.user.pushToken, {
       title: "Job canceled",
-      body: `The homeowner canceled the ${job.serviceType.replace("-", " ")} clean scheduled for ${new Date(job.scheduledFor).toLocaleDateString()}.`,
+      body: `The homeowner canceled the ${serviceLabel(job.serviceType)} scheduled for ${new Date(job.scheduledFor).toLocaleDateString()}.`,
       data: { jobId: job.id },
     });
   }

@@ -1,8 +1,12 @@
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { BubbleLoader } from "@/components/BubbleLoader";
+import { PrimaryButton } from "@/components/PrimaryButton";
 import { api, ApiError, Job } from "@/api/client";
+import { serviceLabel } from "@/catalog";
 import { useAuth } from "@/context/AuthContext";
+import { colors, radii } from "@/theme";
 import { MainTabScreenProps } from "@/navigation";
 
 type Props = MainTabScreenProps<"JobFeed">;
@@ -11,6 +15,7 @@ export default function JobFeedScreen({ navigation }: Props) {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -19,6 +24,7 @@ export default function JobFeedScreen({ navigation }: Props) {
       setJobs(await api.availableJobs());
     } finally {
       setRefreshing(false);
+      setLoading(false);
     }
   }, []);
 
@@ -61,39 +67,46 @@ export default function JobFeedScreen({ navigation }: Props) {
     }
   }
 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
+        <BubbleLoader />
+      </View>
+    );
+  }
+
   return (
     <FlatList
-      style={{ flex: 1, backgroundColor: "#fff" }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={{ padding: 16 }}
       data={jobs}
       keyExtractor={(j) => j.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={colors.primary} />}
       ListEmptyComponent={<Text style={styles.empty}>No open jobs right now — check back soon.</Text>}
       renderItem={({ item }) => (
         <Pressable style={styles.card} onPress={() => navigation.navigate("JobDetail", { jobId: item.id, source: "feed" })}>
-          <Text style={styles.cardTitle}>{item.serviceType.replace("-", " ")} clean</Text>
+          <Text style={styles.cardTitle}>{serviceLabel(item.serviceType)}</Text>
           <Text style={styles.address}>
             {item.address.city}, {item.address.state}
           </Text>
           <Text style={styles.meta}>{new Date(item.scheduledFor).toLocaleString()}</Text>
-          <Text style={styles.meta}>{item.estimatedHours} hrs estimated</Text>
+          <Text style={styles.meta}>{item.squareFootage.toLocaleString()} sq ft</Text>
           <Text style={styles.price}>${(item.priceCents / 100).toFixed(2)}</Text>
 
           <View style={styles.actions}>
-            <Pressable
-              style={[styles.actionButton, styles.declineButton]}
+            <PrimaryButton
+              label="Decline"
+              variant="outline"
               onPress={() => onDecline(item)}
               disabled={busyId === item.id}
-            >
-              <Text style={styles.declineText}>Decline</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.actionButton, styles.acceptButton]}
+              style={{ flex: 1 }}
+            />
+            <PrimaryButton
+              label="Accept"
               onPress={() => onAccept(item)}
               disabled={busyId === item.id}
-            >
-              <Text style={styles.acceptText}>Accept</Text>
-            </Pressable>
+              style={{ flex: 1 }}
+            />
           </View>
         </Pressable>
       )}
@@ -102,22 +115,18 @@ export default function JobFeedScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  empty: { textAlign: "center", color: "#888", marginTop: 40 },
+  empty: { textAlign: "center", color: colors.textMuted, marginTop: 40 },
   card: {
     borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 12,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
     padding: 16,
     marginBottom: 12,
   },
-  cardTitle: { fontSize: 16, fontWeight: "700", textTransform: "capitalize" },
-  address: { color: "#444", marginTop: 6 },
-  meta: { color: "#888", marginTop: 2, fontSize: 13 },
-  price: { marginTop: 8, fontWeight: "700", fontSize: 16 },
+  cardTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
+  address: { color: colors.textMuted, marginTop: 6 },
+  meta: { color: colors.textMuted, marginTop: 2, fontSize: 13 },
+  price: { marginTop: 8, fontWeight: "700", fontSize: 16, color: colors.primary },
   actions: { flexDirection: "row", gap: 10, marginTop: 14 },
-  actionButton: { flex: 1, borderRadius: 8, padding: 12, alignItems: "center" },
-  declineButton: { borderWidth: 1, borderColor: "#B00020" },
-  declineText: { color: "#B00020", fontWeight: "600" },
-  acceptButton: { backgroundColor: "#1565C0" },
-  acceptText: { color: "#fff", fontWeight: "600" },
 });

@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Clean Request Pro",
+    "slug": "clean-request-cleaner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "cleanerapp",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cleanrequest.cleaner"
+    },
+    "android": {
+      "package": "com.cleanrequest.cleaner",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "apiUrl": "https://your-api-domain.com"
+    }
+  }
+}

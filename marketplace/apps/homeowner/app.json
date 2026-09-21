@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Clean Request",
+    "slug": "clean-request-homeowner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cleanrequest.homeowner",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We use your location to find cleaners near your home and to prefill your address."
+      }
+    },
+    "android": {
+      "package": "com.cleanrequest.homeowner",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": ["@stripe/stripe-react-native"],
+    "extra": {
+      "apiUrl": "https://your-api-domain.com",
+      "stripePublishableKey": "pk_test_..."
+    }
+  }
+}

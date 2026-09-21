@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Clean Request Pro",
-    "slug": "clean-request-cleaner",
+    "name": "Suds & Scrub Pro",
+    "slug": "suds-and-scrub-cleaner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "cleanerapp",
+    "scheme": "sudsandscrub",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -15,13 +15,13 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cleanrequest.cleaner",
+      "bundleIdentifier": "com.sudsandscrub.cleaner",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to show you cleaning jobs near you."
       }
     },
     "android": {
-      "package": "com.cleanrequest.cleaner",
+      "package": "com.sudsandscrub.cleaner",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"

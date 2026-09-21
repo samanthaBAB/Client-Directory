@@ -26,7 +26,7 @@ export default function LoginScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Clean Request Pro</Text>
+      <Text style={styles.title}>Suds & Scrub Pro</Text>
       <Text style={styles.subtitle}>Find cleaning jobs near you</Text>
 
       <TextInput

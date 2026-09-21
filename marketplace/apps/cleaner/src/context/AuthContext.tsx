@@ -2,7 +2,7 @@ import * as SecureStore from "expo-secure-store";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { api, Me, setAuthToken } from "@/api/client";
 
-const TOKEN_KEY = "clean-request-cleaner-token";
+const TOKEN_KEY = "suds-and-scrub-cleaner-token";
 
 type AuthContextValue = {
   user: Me | null;

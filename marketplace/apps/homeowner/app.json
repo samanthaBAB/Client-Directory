@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Clean Request",
-    "slug": "clean-request-homeowner",
+    "name": "Suds & Scrub",
+    "slug": "suds-and-scrub-homeowner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,13 +14,13 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cleanrequest.homeowner",
+      "bundleIdentifier": "com.sudsandscrub.homeowner",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to find cleaners near your home and to prefill your address."
       }
     },
     "android": {
-      "package": "com.cleanrequest.homeowner",
+      "package": "com.sudsandscrub.homeowner",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"

@@ -23,7 +23,7 @@ export default function PaymentScreen({ route, navigation }: Props) {
           return;
         }
         const { error: initError } = await initPaymentSheet({
-          merchantDisplayName: "Clean Request",
+          merchantDisplayName: "Suds & Scrub",
           paymentIntentClientSecret: clientSecret,
         });
         if (initError) {

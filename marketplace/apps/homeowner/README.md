@@ -1,4 +1,4 @@
-# Clean Request — homeowner app
+# Suds & Scrub — homeowner app
 
 Expo (React Native) app for homeowners: request a cleaning, track its
 status, pay once a cleaner accepts, leave a review after it's done.

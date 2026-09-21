@@ -1,4 +1,4 @@
-# Clean Request Pro — cleaner app
+# Suds & Scrub Pro — cleaner app
 
 Expo (React Native) app for cleaners: browse open job requests, accept or
 decline them, track jobs you've taken, mark them complete, and set up
@@ -26,7 +26,7 @@ npx expo start
 A cleaner can browse the job feed right after signing up, but the backend
 blocks accepting a job until they've finished Stripe's Express onboarding
 (identity + bank account) — the **Payouts** tab starts that flow in an
-in-app browser. `app.json`'s `scheme` (`cleanerapp`) is the deep link
+in-app browser. `app.json`'s `scheme` (`sudsandscrub`) is the deep link
 Stripe redirects back to; it must match `STRIPE_CONNECT_RETURN_URL` in the
 backend's environment.
 
@@ -57,4 +57,4 @@ Same as the homeowner app — see
 [`../homeowner/README.md`](../homeowner/README.md#building-for-the-app-store--play-store)
 for the full EAS Build walkthrough. Use a different Apple/Google app
 listing than the homeowner app (this is a separate app with its own
-bundle identifier, `com.cleanrequest.cleaner`).
+bundle identifier, `com.sudsandscrub.cleaner`).

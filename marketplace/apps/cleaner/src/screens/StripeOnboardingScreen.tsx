@@ -36,7 +36,7 @@ export default function StripeOnboardingScreen({}: Props) {
     setStarting(true);
     try {
       const { url } = await api.stripeOnboardingUrl();
-      await WebBrowser.openAuthSessionAsync(url, "cleanerapp://stripe-onboarding-complete");
+      await WebBrowser.openAuthSessionAsync(url, "sudsandscrub://stripe-onboarding-complete");
       await check();
     } catch (err) {
       Alert.alert("Couldn't start payout setup", err instanceof ApiError ? err.message : "Something went wrong");

@@ -1,0 +1,11 @@
+{
+  "name": "brand-assets",
+  "private": true,
+  "description": "Regenerates the app icon/splash PNGs from icon.html/splash.html via a headless browser. Not part of any app's build — a design tool, run by hand.",
+  "scripts": {
+    "render": "node render.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

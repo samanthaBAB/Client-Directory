@@ -74,10 +74,15 @@ Dark purple (`#241934`) + green (`#2FAE66`) throughout, defined once per
 app in `src/theme.ts`. `src/components/Bubbles.tsx` and `Sponge.tsx` are
 small decorative SVGs used on auth screens; `BubbleLoader.tsx` replaces
 the default spinner everywhere; `PrimaryButton.tsx` is the shared CTA
-button, with a little animated bubble-pop on press. The app icon
-(`marketplace/scripts/make-brand-icon.js`) and both apps' placeholder
-icon/splash art follow the same palette — still programmer art, not real
-design work; swap before shipping.
+button, with a little animated bubble-pop on press.
+
+Both apps' icon/splash art (`marketplace/scripts/brand-assets/`) is a
+cursive "Suds & Scrub" wordmark (Dancing Script) over the same glossy
+bubble cluster, rendered from `icon.html`/`splash.html` via a headless
+browser rather than hand-drawn (`npm install && node render.js` in that
+folder to regenerate after changing the HTML/CSS). Still programmer-made,
+not real design work — worth commissioning proper artwork before shipping,
+but closer to the actual brand than a placeholder.
 
 ## Getting a local dev environment running end-to-end
 

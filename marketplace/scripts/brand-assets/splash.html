@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1284px;
+    height: 2778px;
+    background: #241934;
+    overflow: hidden;
+  }
+  .bubble { position: absolute; border-radius: 50%; }
+  .wordmark {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1560px;
+    text-align: center;
+    font-family: 'Dancing Script', cursive;
+    font-weight: 700;
+    font-size: 170px;
+    color: #ffffff;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+</style>
+</head>
+<body>
+  <!-- Same cluster as icon.html, shifted to sit centered in this taller
+       canvas: +130px x (centers the 1024-wide layout in 1284px),
+       +500px y (upper-middle, leaving room for the wordmark below). -->
+  <div class="bubble" style="left:400px; top:730px; width:560px; height:560px; background: radial-gradient(circle at 35% 32%, #7CE3A6 0%, #2FAE66 55%, #2FAE66 100%);"></div>
+  <div class="bubble" style="left:250px; top:520px; width:280px; height:280px; background: radial-gradient(circle at 35% 32%, #A9F0C4 0%, #6BD99A 60%, #6BD99A 100%);"></div>
+  <div class="bubble" style="left:810px; top:520px; width:220px; height:220px; background: radial-gradient(circle at 35% 32%, #5FD397 0%, #1F7A48 60%, #1F7A48 100%);"></div>
+  <div class="bubble" style="left:920px; top:880px; width:110px; height:110px; background: radial-gradient(circle at 35% 32%, #A9F0C4 0%, #6BD99A 60%, #6BD99A 100%);"></div>
+
+  <div class="wordmark">Suds &amp; Scrub</div>
+</body>
+</html>

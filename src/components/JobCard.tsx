@@ -68,6 +68,7 @@ export default function JobCard({
 }: Props) {
   const modal = useModal();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [expanded, setExpanded] = useState(false);
   const [visitOpen, setVisitOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
@@ -84,6 +85,11 @@ export default function JobCard({
   const primaryLabel = job.property || addrLine || "Unnamed Job";
   const timeLine = job.startTime || job.endTime ? formatTimeRange(job.startTime, job.endTime) : "";
   const isPendingOffer = mode === "employee" && job.assignmentStatus === "PENDING";
+  // Owner's Clients tab lists every property; collapse each to just the
+  // address by default so scanning a long list isn't a wall of supply
+  // notes and access codes — tap a client to see the rest.
+  const collapsible = mode === "owner";
+  const showDetails = !collapsible || expanded;
 
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || !fileList.length || !onUploadPhotos) return;
@@ -99,7 +105,11 @@ export default function JobCard({
 
   return (
     <div className="job-card">
-      <div className="job-top">
+      <div
+        className="job-top"
+        onClick={collapsible ? () => setExpanded((v) => !v) : undefined}
+        style={collapsible ? { cursor: "pointer" } : undefined}
+      >
         <div>
           <span className="job-name">{primaryLabel}</span>
           {svcType && <span className="str-pill">{svcType}</span>}
@@ -113,7 +123,13 @@ export default function JobCard({
             <span className="str-pill" style={{ background: "var(--str-bg)", color: "var(--str-text)", border: "1px solid var(--str-border)" }}>New Offer</span>
           )}
         </div>
+        {collapsible && (
+          <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{expanded ? "▴ Hide" : "▾ Details"}</span>
+        )}
       </div>
+
+      {!showDetails ? null : (
+      <>
       <div className="job-meta">
         {job.property && addrLine ? <>{addrLine}<br /></> : null}
         {job.schedule}{timeLine ? ` · ${timeLine}` : ""}
@@ -270,6 +286,8 @@ export default function JobCard({
             </div>
           )}
         </>
+      )}
+      </>
       )}
     </div>
   );

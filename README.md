@@ -107,21 +107,62 @@ own password on first login.
 
 ## Onboarding a new customer business (manual, by you)
 
-There's no public signup page yet — you create every customer account
-yourself:
+`/get-started` is the public marketing page — the one you send people to
+so they can read about the product, see pricing, and reach you through its
+contact form. There's still no public *signup*, though: you create every
+customer account yourself once someone's ready to buy:
 
 1. Log into `/admin` with your super admin account.
 2. Click **+ Add Business**, fill in the business name, the owner's name
-   and email, their property limit, and monthly price.
+   and email, and their property limit. The monthly price auto-fills at
+   the standard rate ($4/property) — only change it if this business is
+   getting a different deal.
 3. You'll get a temporary password on screen — send it to that business's
    owner directly (however you'd normally reach a client).
-4. They log in, set their own password, and start adding their own jobs
+4. Click **Get Payment Link** on their row and send them the Stripe
+   Checkout link it generates — that's what actually collects their
+   $100 sign-on fee and starts their subscription (see **Billing
+   (Stripe)** below). Their account works before they pay, so you can
+   also let them log in and explore first if you want.
+5. They log in, set their own password, and start adding their own jobs
    and cleaners. Their data is completely isolated from every other
    business, including yours.
 
 From the same console you can suspend an account (blocks all logins for
 that business) or reactivate it, and see how many properties/cleaners
-each business is using against their plan.
+each business is using against their plan, and whether they're actually
+paying yet.
+
+## Billing (Stripe)
+
+Every business pays a one-time $100 sign-on fee plus $4/property/month
+(both set in `src/lib/pricing.ts` — change the numbers there if you ever
+adjust pricing). This runs through Stripe, not QuickBooks.
+
+**One-time setup:**
+
+1. Create a [Stripe](https://stripe.com) account if you don't have one.
+2. From the Dashboard, go to **Developers → API keys** and copy your
+   secret key into `STRIPE_SECRET_KEY`.
+3. Go to **Developers → Webhooks**, add an endpoint at
+   `https://<your-domain>/api/webhooks/stripe`, and select at least these
+   events: `checkout.session.completed`, `invoice.payment_failed`,
+   `customer.subscription.deleted`. Copy the endpoint's signing secret
+   into `STRIPE_WEBHOOK_SECRET`.
+
+**Per customer, from then on:** click **Get Payment Link** in `/admin` for
+that business (see above) and send them the link. When they pay, the
+webhook automatically marks their account `ACTIVE` and saves their
+subscription. If a payment ever fails or they cancel, the webhook flips
+them to `SUSPENDED` automatically — you don't have to watch for it.
+
+## The /get-started marketing page and its contact form
+
+`/get-started` is a public page (no login needed) — that's intentional,
+see `src/proxy.ts`. Its contact form posts to `/api/contact`, which texts
+`LEAD_NOTIFY_PHONE` with whatever the person entered. It doesn't write
+anything to the database — if you want a persistent list of leads instead
+of (or in addition to) a text, that'd mean adding a `Lead` model.
 
 ## Deploying it for real, on your own domain
 

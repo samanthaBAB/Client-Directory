@@ -7,12 +7,16 @@ export default auth((req) => {
   const isLoginPage = pathname.startsWith("/login");
   const isChangePwPage = pathname.startsWith("/change-password");
   const isApiRoute = pathname.startsWith("/api");
+  // The public marketing/sign-up page and its contact-form endpoint — the
+  // whole point is that a stranger with no account can load these.
+  const isPublicMarketingRoute = pathname.startsWith("/get-started");
+  const isContactApiRoute = pathname.startsWith("/api/contact");
 
-  if (!isLoggedIn && isApiRoute) {
+  if (!isLoggedIn && isApiRoute && !isContactApiRoute) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isLoggedIn && !isLoginPage) {
+  if (!isLoggedIn && !isLoginPage && !isPublicMarketingRoute && !isContactApiRoute) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 

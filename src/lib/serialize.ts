@@ -58,6 +58,7 @@ export function serializeOrganization(o: Organization & { _count?: { users: numb
     monthlyPriceCents: o.monthlyPriceCents,
     status: o.status,
     notes: o.notes,
+    hasActiveSubscription: !!o.stripeSubscriptionId,
     createdAt: o.createdAt.getTime(),
     userCount: o._count?.users ?? undefined,
     jobCount: o._count?.jobs ?? undefined,

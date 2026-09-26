@@ -11,6 +11,7 @@ export interface ClientOrganization {
   monthlyPriceCents: number;
   status: OrgStatus;
   notes: string | null;
+  hasActiveSubscription: boolean;
   createdAt: number;
   userCount?: number;
   jobCount?: number;

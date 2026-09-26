@@ -44,8 +44,13 @@ model Organization {
   monthlyPriceCents Int
   status            OrgStatus @default(ACTIVE)
   notes             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  // Set once they complete Stripe Checkout for their sign-on fee + first
+  // month. A null subscription id means they haven't paid yet — the admin
+  // console's "Get Payment Link" flow is what sends them there.
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   users User[]
   jobs  Job[]

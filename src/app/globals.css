@@ -51,6 +51,15 @@ h1 { font-size: 23px; margin: 0 0 2px; }
 }
 .tab-btn.active { color: var(--accent-strong); border-bottom-color: var(--accent-strong); }
 
+@media (max-width: 480px) {
+  .wrap { padding: 12px; }
+  h1 { font-size: 19px; }
+  .sub { font-size: 13px; margin-bottom: 10px; }
+  .viewer-badge { font-size: 12.5px; }
+  .tabs { margin-bottom: 10px; }
+  .tab-btn { padding: 7px 10px; font-size: 14px; }
+}
+
 .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
 select, input[type=text], input[type=tel], input[type=date], input[type=time], input[type=email], input[type=password], textarea {
   background: var(--surface); color: var(--text); border: 1px solid var(--border);
@@ -120,6 +129,7 @@ textarea { resize: vertical; min-height: 44px; width: 100%; }
 .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .cal-title { font-size: 17px; font-weight: 700; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
 .cal-dow { font-size: 12px; font-weight: 700; text-align: center; color: var(--text-muted); padding: 4px 0; text-transform: uppercase; }
 .cal-day { position: relative; aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14.5px; cursor: pointer; }
 .cal-day.empty { visibility: hidden; cursor: default; }

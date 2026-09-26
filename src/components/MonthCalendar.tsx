@@ -15,7 +15,7 @@ export default function MonthCalendar({
   const today = todayStr();
   const [year, setYear] = useState(() => Number(today.slice(0, 4)));
   const [month, setMonth] = useState(() => Number(today.slice(5, 7)) - 1);
-  const [selected, setSelected] = useState<string | null>(today);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const first = new Date(year, month, 1);
   const startDow = first.getDay();

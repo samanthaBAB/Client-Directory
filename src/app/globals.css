@@ -128,8 +128,8 @@ textarea { resize: vertical; min-height: 44px; width: 100%; }
 
 .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .cal-title { font-size: 17px; font-weight: 700; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.week-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.week-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-bottom: 4px; }
 .cal-dow { font-size: 12px; font-weight: 700; text-align: center; color: var(--text-muted); padding: 4px 0; text-transform: uppercase; }
 .cal-day { position: relative; aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 14.5px; cursor: pointer; }
 .cal-day.empty { visibility: hidden; cursor: default; }

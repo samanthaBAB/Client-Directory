@@ -38,6 +38,8 @@ export default async function HomePage() {
         phone: null,
         role: session.user.role,
         mustChangePw: session.user.mustChangePw,
+        payoutPercent: null,
+        payoutFlatFee: null,
       }}
       organization={org}
       initialJobs={jobs.map((j) => serializeJob(j, { includePrice: owner }))}

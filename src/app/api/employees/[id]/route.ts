@@ -24,6 +24,8 @@ export async function PATCH(
 
   if ("phone" in body) data.phone = body.phone ? String(body.phone).trim() : null;
   if ("name" in body && String(body.name).trim()) data.name = String(body.name).trim();
+  if ("payoutPercent" in body) data.payoutPercent = body.payoutPercent == null ? null : Number(body.payoutPercent);
+  if ("payoutFlatFee" in body) data.payoutFlatFee = body.payoutFlatFee == null ? null : Number(body.payoutFlatFee);
 
   // Only the owner can promote/demote admins, matching the original app's rule.
   if ("isAdmin" in body) {

@@ -37,6 +37,10 @@ export async function POST(req: NextRequest) {
   const name = String(body.name ?? "").trim();
   const email = String(body.email ?? "").toLowerCase().trim();
   const phone = body.phone ? String(body.phone).trim() : null;
+  // Standard cut for a new cleaner unless the owner sets something else:
+  // 25% off the price, minus $5, rounded up to the nearest dollar.
+  const payoutPercent = body.payoutPercent != null ? Number(body.payoutPercent) : 25;
+  const payoutFlatFee = body.payoutFlatFee != null ? Number(body.payoutFlatFee) : 5;
 
   if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
   if (!email) return NextResponse.json({ error: "Email is required" }, { status: 400 });
@@ -53,6 +57,8 @@ export async function POST(req: NextRequest) {
       role: "EMPLOYEE",
       mustChangePw: true,
       organizationId: session.user.organizationId,
+      payoutPercent,
+      payoutFlatFee,
     },
   });
 

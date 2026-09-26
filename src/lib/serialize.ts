@@ -8,6 +8,8 @@ export function serializeUser(u: User) {
     phone: u.phone,
     role: u.role,
     mustChangePw: u.mustChangePw,
+    payoutPercent: u.payoutPercent,
+    payoutFlatFee: u.payoutFlatFee,
   };
 }
 

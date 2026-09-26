@@ -23,6 +23,8 @@ export interface ClientUser {
   phone: string | null;
   role: Role;
   mustChangePw: boolean;
+  payoutPercent: number | null;
+  payoutFlatFee: number | null;
 }
 
 export interface ClientEmployee extends ClientUser {

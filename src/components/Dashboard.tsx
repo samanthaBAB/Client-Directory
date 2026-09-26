@@ -165,6 +165,14 @@ function DashboardInner({
     setEmployees((es) => es.map((e) => (e.id === id ? { ...e, role: updated.role } : e)));
   }
 
+  async function handleUpdatePayRate(id: string, payoutPercent: number, payoutFlatFee: number) {
+    const updated = await api(`/api/employees/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ payoutPercent, payoutFlatFee }),
+    });
+    setEmployees((es) => es.map((e) => (e.id === id ? { ...e, payoutPercent: updated.payoutPercent, payoutFlatFee: updated.payoutFlatFee } : e)));
+  }
+
   async function handleResetPassword(id: string) {
     const res = await api(`/api/employees/${id}/reset-password`, { method: "POST" });
     return res.tempPassword as string;
@@ -254,7 +262,7 @@ function DashboardInner({
   // self-cleans show up in their calendar and trigger the same SMS
   // notification path as any other assignee.
   const assignableUsers = owner
-    ? [...employees, { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, mustChangePw: user.mustChangePw, jobCount: 0 }]
+    ? [...employees, { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, mustChangePw: user.mustChangePw, payoutPercent: null, payoutFlatFee: null, jobCount: 0 }]
     : employees;
 
   const myAssignedJobs = jobs.filter((j) => j.assignedTo === user.id);
@@ -372,6 +380,7 @@ function DashboardInner({
               currentRole={user.role}
               onAddEmployee={handleAddEmployee}
               onToggleAdmin={handleToggleAdmin}
+              onUpdatePayRate={handleUpdatePayRate}
               onResetPassword={handleResetPassword}
               onRemoveEmployee={handleRemoveEmployee}
               fetchVisitsForEmployee={fetchVisitsForEmployee}

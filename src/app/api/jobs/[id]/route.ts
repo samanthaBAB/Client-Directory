@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isOwnerLevel } from "@/lib/authz";
 import { serializeJob } from "@/lib/serialize";
 import { sendSms } from "@/lib/sms";
+import { calculatePayout } from "@/lib/payout";
 
 const OWNER_EDITABLE_FIELDS = [
   "customer",
@@ -61,9 +62,13 @@ export async function PATCH(
     if (field === "assignedTo") {
       const candidateId: string | null = body.assignedTo || null;
       let resolvedId: string | null = null;
+      let resolvedEmployee = null;
       if (candidateId) {
         const employee = await prisma.user.findUnique({ where: { id: candidateId } });
-        resolvedId = employee && employee.organizationId === session.user.organizationId ? candidateId : null;
+        if (employee && employee.organizationId === session.user.organizationId) {
+          resolvedId = candidateId;
+          resolvedEmployee = employee;
+        }
       }
       data.assignedToId = resolvedId;
       // Only reset to a fresh offer when who it's assigned to actually
@@ -71,6 +76,13 @@ export async function PATCH(
       // who already accepted.
       if (resolvedId !== existing.assignedToId) {
         data.assignmentStatus = resolvedId ? "PENDING" : "NONE";
+      }
+      // If this cleaner has a payout rate configured, their pay is
+      // calculated from the price automatically rather than typed in.
+      if (resolvedEmployee) {
+        const effectivePrice = typeof data.price === "string" ? data.price : existing.price;
+        const autoPayout = calculatePayout(effectivePrice, resolvedEmployee.payoutPercent, resolvedEmployee.payoutFlatFee);
+        if (autoPayout != null) data.payout = autoPayout;
       }
     } else if (field === "sameDayCheckIn") {
       data.sameDayCheckIn = !!body.sameDayCheckIn;

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isOwnerLevel } from "@/lib/authz";
 import { serializeJob } from "@/lib/serialize";
 import { sendSms } from "@/lib/sms";
+import { calculatePayout } from "@/lib/payout";
 
 export async function GET() {
   const session = await auth();
@@ -41,10 +42,17 @@ export async function POST(req: NextRequest) {
   }
 
   let assignedToId: string | null = body.assignedTo || null;
+  let assignedEmployee = null;
   if (assignedToId) {
     const employee = await prisma.user.findUnique({ where: { id: assignedToId } });
     if (!employee || employee.organizationId !== organizationId) assignedToId = null;
+    else assignedEmployee = employee;
   }
+
+  const price = body.price?.trim() || null;
+  const autoPayout = assignedEmployee
+    ? calculatePayout(price, assignedEmployee.payoutPercent, assignedEmployee.payoutFlatFee)
+    : null;
 
   const job = await prisma.job.create({
     data: {
@@ -55,8 +63,8 @@ export async function POST(req: NextRequest) {
       address: body.address?.trim() || null,
       city: body.city?.trim() || null,
       state: body.state?.trim() || null,
-      price: body.price?.trim() || null,
-      payout: body.payout?.trim() || null,
+      price,
+      payout: autoPayout ?? (body.payout?.trim() || null),
       phone: body.phone?.trim() || null,
       schedule: body.schedule?.trim() || null,
       recurrenceType: body.recurrenceType || null,

@@ -23,7 +23,7 @@ async function main() {
   const job = await prisma.job.create({
     data: {
       organizationId: owner.organizationId,
-      customer: "Faye Viverka",
+      customer: "Faye Veverka",
       address: "3277 Bella Road",
       price,
       payout,

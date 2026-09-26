@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { calculatePayout } from "../src/lib/payout";
+import { describeRecurrence } from "../src/lib/recurrence";
 
 const prisma = new PrismaClient();
 
@@ -38,22 +39,48 @@ async function main() {
   if (!owner || !owner.organizationId) throw new Error(`Owner account ${ownerEmail} not found or has no organization.`);
   const orgId = owner.organizationId;
 
-  // Madeline Fontenot — new client, $20/hr residential, not yet scheduled/assigned.
-  const { job: madeline, created } = await findOrCreate(orgId, "Madeline Fontenot", "103 Dusty Ridge Drive", {
-    price: "$20/hr",
-    serviceType: RESIDENTIAL,
-  });
-  if (!created) await priceIt(madeline.id, "$20/hr", RESIDENTIAL);
-  console.log(`Madeline Fontenot — 103 Dusty Ridge Drive: $20/hr, Residential Cleaning${created ? " (created)" : " (updated)"}.`);
+  // Madeline Fontenot — already exists in the app (per Samantha). Look her
+  // up by customer name alone in case the address on file differs, and set
+  // her real recurring schedule: every Mon/Wed/Fri 6:30-9:30am, solely hers.
+  const madeline = await prisma.job.findFirst({ where: { organizationId: orgId, customer: "Madeline Fontenot" } });
+  if (!madeline) {
+    console.log("SKIPPED: Madeline Fontenot not found under that exact customer name — check spelling in the app.");
+  } else {
+    const recurrence = { recurrenceType: "WEEKLY", recurrenceDays: [1, 3, 5], recurrenceOrdinals: [], recurrenceAnchor: null };
+    await prisma.job.update({
+      where: { id: madeline.id },
+      data: {
+        address: "103 Dusty Ridge Drive",
+        price: "$20/hr",
+        serviceType: RESIDENTIAL,
+        startTime: "06:30",
+        endTime: "09:30",
+        schedule: describeRecurrence(recurrence),
+        ...recurrence,
+        assignedToId: owner.id,
+        assignmentStatus: "ACCEPTED",
+      },
+    });
+    console.log("Madeline Fontenot — 103 Dusty Ridge Drive: $20/hr, Residential, every Mon/Wed/Fri 6:30-9:30am, Samantha (updated).");
+  }
 
-  // Becky Sanders — new client in the app (she already exists in QuickBooks,
-  // but not here), $20/hr residential, not yet scheduled/assigned.
-  const { job: becky, created: beckyCreated } = await findOrCreate(orgId, "Becky Sanders", "103 1/2 Vital Street", {
-    price: "$20/hr",
-    serviceType: RESIDENTIAL,
+  // Becky Sanders — new to the app (exists in QuickBooks only so far),
+  // $20/hr residential, every Thursday at 3pm, solely Samantha's.
+  const { job: becky, created: beckyCreated } = await findOrCreate(orgId, "Becky Sanders", "103 1/2 Vital Street");
+  const beckyRecurrence = { recurrenceType: "WEEKLY", recurrenceDays: [4], recurrenceOrdinals: [], recurrenceAnchor: null };
+  await prisma.job.update({
+    where: { id: becky.id },
+    data: {
+      price: "$20/hr",
+      serviceType: RESIDENTIAL,
+      startTime: "15:00",
+      schedule: describeRecurrence(beckyRecurrence),
+      ...beckyRecurrence,
+      assignedToId: owner.id,
+      assignmentStatus: "ACCEPTED",
+    },
   });
-  if (!beckyCreated) await priceIt(becky.id, "$20/hr", RESIDENTIAL);
-  console.log(`Becky Sanders — 103 1/2 Vital Street: $20/hr, Residential Cleaning${beckyCreated ? " (created)" : " (updated)"}.`);
+  console.log(`Becky Sanders — 103 1/2 Vital Street: $20/hr, Residential, every Thursday 3pm, Samantha${beckyCreated ? " (created)" : " (updated)"}.`);
 
   // Faye Veverka, Nicole Ferguson — $125 residential each, already exist from earlier scripts.
   for (const [customer, address] of [

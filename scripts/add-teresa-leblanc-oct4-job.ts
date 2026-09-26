@@ -30,7 +30,7 @@ async function main() {
       schedule: describeRecurrence(recurrence),
       ...recurrence,
       assignedToId: owner.id,
-      assignmentStatus: "PENDING",
+      assignmentStatus: "ACCEPTED",
     },
   });
 

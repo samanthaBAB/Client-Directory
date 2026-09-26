@@ -25,7 +25,7 @@ async function main() {
       ...recurrence,
       startTime: "08:00",
       assignedToId: owner.id,
-      assignmentStatus: "PENDING",
+      assignmentStatus: "ACCEPTED",
     },
   });
 

@@ -161,6 +161,7 @@ export default function JobForm({
         >
           <option value="">Not scheduled / one-off, no set day</option>
           <option value="ONCE">One-time, on a specific date</option>
+          <option value="DAILY_RANGE">Every day, across a date range (e.g. a multi-day job)</option>
           <option value="WEEKLY">Every week, on certain day(s)</option>
           <option value="BIWEEKLY">Every other week, on certain day(s)</option>
           <option value="MONTHLY_NTH">Certain week(s) of the month (e.g. 1st &amp; 3rd Thursday)</option>
@@ -171,6 +172,27 @@ export default function JobForm({
         <div className="field">
           <label>Date</label>
           <input type="date" value={values.recurrenceAnchor} onChange={(e) => set("recurrenceAnchor", e.target.value)} />
+        </div>
+      )}
+
+      {values.recurrenceType === "DAILY_RANGE" && (
+        <div className="grid2">
+          <div className="field">
+            <label>From</label>
+            <input
+              type="date"
+              value={values.recurrenceAnchor.split("|")[0] ?? ""}
+              onChange={(e) => set("recurrenceAnchor", `${e.target.value}|${values.recurrenceAnchor.split("|")[1] ?? ""}`)}
+            />
+          </div>
+          <div className="field">
+            <label>Through</label>
+            <input
+              type="date"
+              value={values.recurrenceAnchor.split("|")[1] ?? ""}
+              onChange={(e) => set("recurrenceAnchor", `${values.recurrenceAnchor.split("|")[0] ?? ""}|${e.target.value}`)}
+            />
+          </div>
         </div>
       )}
 

@@ -35,12 +35,27 @@ function isLastWeekdayOfMonth(dateStr: string): boolean {
   return next.getUTCMonth() !== d.getUTCMonth();
 }
 
+// DAILY_RANGE stores its start/end as "YYYY-MM-DD|YYYY-MM-DD" in
+// recurrenceAnchor — there's no separate column for a second date, and this
+// is the only recurrence type that needs one.
+function parseRange(anchor: string | null): [string, string] | null {
+  if (!anchor) return null;
+  const [start, end] = anchor.split("|");
+  if (!start || !end) return null;
+  return [start, end];
+}
+
 // Does this job happen on this specific calendar day?
 export function occursOnDate(job: RecurrenceFields, dateStr: string): boolean {
   if (!job.recurrenceType) return false;
   const dow = dayOfWeek(dateStr);
 
   if (job.recurrenceType === "ONCE") return job.recurrenceAnchor === dateStr;
+
+  if (job.recurrenceType === "DAILY_RANGE") {
+    const range = parseRange(job.recurrenceAnchor);
+    return !!range && dateStr >= range[0] && dateStr <= range[1];
+  }
 
   if (job.recurrenceType === "WEEKLY") return job.recurrenceDays.includes(dow);
 
@@ -70,6 +85,10 @@ export function describeRecurrence(job: RecurrenceFields): string {
   switch (job.recurrenceType) {
     case "ONCE":
       return job.recurrenceAnchor ? `One-time on ${job.recurrenceAnchor}` : "One-time";
+    case "DAILY_RANGE": {
+      const range = parseRange(job.recurrenceAnchor);
+      return range ? `Every day, ${range[0]} – ${range[1]}` : "Every day (pick a date range)";
+    }
     case "WEEKLY":
       return days ? `Every ${days}` : "";
     case "BIWEEKLY":

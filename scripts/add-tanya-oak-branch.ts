@@ -15,7 +15,6 @@ async function main() {
       customer: "Tanya",
       address: "103 Oak Branch Street",
       serviceType: "Deep Clean & Whole-House Organizing",
-      price: "$3,800",
     },
   });
 

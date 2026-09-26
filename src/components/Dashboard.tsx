@@ -281,19 +281,11 @@ function DashboardInner({
           <Link className="link-btn" href="/account">Account settings</Link>
           {" · "}
           <Link className="link-btn" href="/change-password">Change password</Link>
-          {" · "}
-          <button className="link-btn" onClick={() => signOut({ redirectTo: "/login" })}>Sign out</button>
         </div>
       </div>
 
       {owner ? (
         <>
-          <div className="tabs">
-            <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
-            <button className={`tab-btn ${tab === "jobs" ? "active" : ""}`} onClick={() => setTab("jobs")}>Clients</button>
-            <button className={`tab-btn ${tab === "employees" ? "active" : ""}`} onClick={() => setTab("employees")}>Employees</button>
-          </div>
-
           {tab === "calendar" && (
             <MonthCalendar
               jobs={jobs}
@@ -388,12 +380,6 @@ function DashboardInner({
         </>
       ) : (
         <>
-          <div className="tabs">
-            <button className={`tab-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
-            <button className={`tab-btn ${tab === "myjobs" ? "active" : ""}`} onClick={() => setTab("myjobs")}>My Jobs</button>
-            <button className={`tab-btn ${tab === "mycal" ? "active" : ""}`} onClick={() => setTab("mycal")}>Visit Log</button>
-          </div>
-
           {tab === "calendar" && (
             <MonthCalendar
               jobs={myJobs}
@@ -475,6 +461,23 @@ function DashboardInner({
       )}
 
       <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+
+      <nav className="bottom-nav">
+        {owner ? (
+          <>
+            <button className={`bottom-nav-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
+            <button className={`bottom-nav-btn ${tab === "jobs" ? "active" : ""}`} onClick={() => setTab("jobs")}>Clients</button>
+            <button className={`bottom-nav-btn ${tab === "employees" ? "active" : ""}`} onClick={() => setTab("employees")}>Employees</button>
+          </>
+        ) : (
+          <>
+            <button className={`bottom-nav-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
+            <button className={`bottom-nav-btn ${tab === "myjobs" ? "active" : ""}`} onClick={() => setTab("myjobs")}>My Jobs</button>
+            <button className={`bottom-nav-btn ${tab === "mycal" ? "active" : ""}`} onClick={() => setTab("mycal")}>Visit Log</button>
+          </>
+        )}
+        <button className="bottom-nav-btn" onClick={() => signOut({ redirectTo: "/login" })}>Sign Out</button>
+      </nav>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import bcrypt from "bcryptjs";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -48,6 +49,9 @@ export default async function ChangePasswordPage({
   return (
     <div className="auth-page">
       <div className="auth-card">
+        {!session.user.mustChangePw && (
+          <Link className="link-btn" href="/" style={{ display: "inline-block", marginBottom: 14 }}>&larr; Back to Dashboard</Link>
+        )}
         <h1>Set a New Password</h1>
         <p className="sub">
           {session.user.mustChangePw

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import bcrypt from "bcryptjs";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -53,6 +54,7 @@ export default async function AccountPage({
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <Link className="link-btn" href="/" style={{ display: "inline-block", marginBottom: 14 }}>&larr; Back to Dashboard</Link>
         <h1>Account Settings</h1>
         <p className="sub">Update your name, login email, or phone number. You&apos;ll be signed out afterward and can log back in with your new email and current password.</p>
         {error && <div className="auth-error">{ERROR_MESSAGES[error] ?? "Something went wrong."}</div>}

@@ -14,7 +14,7 @@ async function main() {
       organizationId: owner.organizationId,
       customer: "Tanya",
       address: "103 Oak Branch Street",
-      serviceType: "Deep Clean",
+      serviceType: "Deep Clean & Whole-House Organizing",
       price: "$3,800",
     },
   });

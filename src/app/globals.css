@@ -170,3 +170,18 @@ textarea { resize: vertical; min-height: 44px; width: 100%; }
 .temp-pw-box code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-size: 15px; }
 
 @media (max-width: 560px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+/* Policy / static content pages */
+.policy-page { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; line-height: 1.6; }
+.policy-page h1 { font-size: 26px; margin: 0 0 4px; }
+.policy-page h2 { font-size: 18px; margin: 28px 0 8px; color: var(--text); }
+.policy-page p, .policy-page li { color: var(--text-secondary); font-size: 15px; }
+.policy-page ul { padding-left: 20px; }
+.policy-page a { color: var(--accent-strong); }
+.policy-page .updated { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+
+/* Offline fallback page (served standalone, outside the app shell) */
+.offline-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.offline-card { max-width: 340px; }
+.offline-card h1 { font-size: 22px; margin: 0 0 8px; }
+.offline-card p { color: var(--text-secondary); font-size: 15px; margin: 0 0 20px; }

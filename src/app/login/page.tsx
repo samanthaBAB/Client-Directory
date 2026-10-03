@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { AuthError } from "next-auth";
 import { signIn } from "@/auth";
 
@@ -53,6 +54,9 @@ export default async function LoginPage({
         </form>
         <p className="auth-caption">
           Don&apos;t have an account yet? Ask your employer to set one up for you.
+        </p>
+        <p className="auth-caption">
+          <Link href="/privacy">Privacy Policy</Link>
         </p>
       </div>
     </div>

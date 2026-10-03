@@ -58,17 +58,25 @@ Apple in particular scrutinizes apps that are "just a website in a
 wrapper" (App Store Review Guideline 4.2). To improve your odds of
 approval:
 
-- Use native plugins where it makes sense instead of pure web equivalents
-  — this shell already includes `@capacitor/camera` (native camera for
-  job photos), `@capacitor/push-notifications` (native push, in addition
-  to the SMS texts the server already sends), and `@capacitor/status-bar`
-  / `@capacitor/splash-screen` for a native look and feel.
-- Make sure the app works well offline or shows a clear offline state
-  (a blank white screen on no connection is a common rejection reason).
-- Test thoroughly on a real device before submitting, and fill out
-  App Store Connect's metadata (screenshots, description, privacy policy
-  — required since this app collects employee names/contact info and
-  photos) completely.
+- Use native plugins where it makes sense instead of pure web equivalents.
+  `@capacitor/status-bar` and `@capacitor/splash-screen` are wired up
+  (see `capacitor.config.ts`) for a native look and feel. `@capacitor/camera`
+  and `@capacitor/push-notifications` are installed as dependencies but
+  **not yet called from app code** — right now job photos still go through
+  the plain web file input, and there's no native push registration (only
+  the server's SMS reminders). Wiring those up is real, but optional, future
+  work — not calling them isn't a rejection reason by itself.
+- ✅ Offline state handled: `public/sw.js` + `public/offline.html` show a
+  branded "you're offline" screen instead of a blank one when there's no
+  connection (registered from `src/app/layout.tsx`).
+- ✅ Privacy policy published at `/privacy` (linked from the login page) —
+  covers what's collected (account info, job/customer data, visit logs,
+  photos, billing via Stripe) and the third parties used (Twilio, Stripe).
+  Point App Store Connect's privacy policy field at
+  `https://app.yourdomain.com/privacy` once deployed.
+- Test thoroughly on a real device before submitting, and fill out App
+  Store Connect's remaining metadata (screenshots, description, app
+  privacy "nutrition label" answers) completely.
 - Both platforms require a signed build: an Apple Developer Program
   membership ($99/yr) for iOS, and a one-time $25 fee for a Google Play
   Developer account.
@@ -79,4 +87,6 @@ approval:
 - **Bundle ID / Application ID:** `com.babcleaning.tasker` (change this in
   `capacitor.config.ts` before adding platforms if you want a different one
   — it can't be changed later without a new app listing)
-- **Icon:** dark purple (`#2B2140`) background, white "B"
+- **Icon:** bubble-lettered "BAB" wordmark (Baloo 2), slanted bottom-left to
+  upper-right, on a dark purple gradient background with faint outlined
+  cleaning-tool icons (broom, bucket, spray bottle, sponge, glove, mop)

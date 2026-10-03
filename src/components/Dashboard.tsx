@@ -17,11 +17,12 @@ import { fmtDuration } from "@/lib/time";
 import JobForm, { JobFormValues } from "./JobForm";
 import JobCard, { compressToLimit } from "./JobCard";
 import EmployeesPanel from "./EmployeesPanel";
+import PayrollPanel from "./PayrollPanel";
 import Calendar from "./Calendar";
 import MonthCalendar from "./MonthCalendar";
 import { Lightbox, ModalProvider } from "./Modal";
 
-type Tab = "calendar" | "jobs" | "employees" | "myjobs" | "mycal";
+type Tab = "calendar" | "jobs" | "employees" | "payroll" | "myjobs" | "mycal";
 
 async function api(path: string, options?: RequestInit) {
   const res = await fetch(path, {
@@ -171,6 +172,13 @@ function DashboardInner({
       body: JSON.stringify({ payoutPercent, payoutFlatFee }),
     });
     setEmployees((es) => es.map((e) => (e.id === id ? { ...e, payoutPercent: updated.payoutPercent, payoutFlatFee: updated.payoutFlatFee } : e)));
+  }
+
+  async function handleSetVisitPaid(visitId: string, paid: boolean) {
+    await api(`/api/visits/${visitId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ payoutPaid: paid }),
+    });
   }
 
   async function handleResetPassword(id: string) {
@@ -386,6 +394,10 @@ function DashboardInner({
               fetchVisitsForEmployee={fetchVisitsForEmployee}
             />
           )}
+
+          {tab === "payroll" && (
+            <PayrollPanel onSetVisitPaid={handleSetVisitPaid} />
+          )}
         </>
       ) : (
         <>
@@ -477,6 +489,7 @@ function DashboardInner({
             <button className={`bottom-nav-btn ${tab === "calendar" ? "active" : ""}`} onClick={() => setTab("calendar")}>Calendar</button>
             <button className={`bottom-nav-btn ${tab === "jobs" ? "active" : ""}`} onClick={() => setTab("jobs")}>Clients</button>
             <button className={`bottom-nav-btn ${tab === "employees" ? "active" : ""}`} onClick={() => setTab("employees")}>Employees</button>
+            <button className={`bottom-nav-btn ${tab === "payroll" ? "active" : ""}`} onClick={() => setTab("payroll")}>Payroll</button>
           </>
         ) : (
           <>

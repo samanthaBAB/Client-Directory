@@ -197,6 +197,12 @@ attach your own domain.
    add your domain, then point your domain's DNS at Vercel as instructed
    there. Update `NEXTAUTH_URL` to match.
 
+**Updating an already-deployed database:** whenever `prisma/schema.prisma`
+changes (like the payroll fields added to `Visit`), run `npm run db:push`
+again against your production `DATABASE_URL` after deploying the new code.
+It only adds/changes columns to match the schema file — it won't delete
+your existing data.
+
 Any other Node host (Render, Railway, a VPS) works too — just run
 `npm run build && npm start` with the same environment variables, and
 point your domain at whatever the host gives you.

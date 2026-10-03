@@ -82,6 +82,9 @@ export interface ClientVisit {
   endedAt: number | null;
   note: string | null;
   sameDayCheckIn: boolean;
+  payoutAmount: number | null;
+  payoutPaid: boolean;
+  payoutPaidAt: number | null;
   createdAt: number;
 }
 

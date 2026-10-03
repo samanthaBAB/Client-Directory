@@ -1,6 +1,8 @@
 // Pulls the first dollar amount out of a free-text price like "$120" or
-// "$20/hr". Returns null when there's nothing to parse.
-function parsePriceAmount(price: string | null | undefined): number | null {
+// "$20/hr". Returns null when there's nothing to parse. Exported so the
+// payroll routes can snapshot a numeric payout from Job.payout the same
+// way this file already parses Job.price.
+export function parsePriceAmount(price: string | null | undefined): number | null {
   if (!price) return null;
   const match = price.match(/[\d,]+(?:\.\d+)?/);
   if (!match) return null;

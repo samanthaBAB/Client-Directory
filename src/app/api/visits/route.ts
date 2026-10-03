@@ -5,6 +5,7 @@ import { isOwnerLevel } from "@/lib/authz";
 import { serializeVisit } from "@/lib/serialize";
 import { sendSms } from "@/lib/sms";
 import { todayStr } from "@/lib/time";
+import { parsePriceAmount } from "@/lib/payout";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
       endedAt: null,
       note: body.note?.trim() || null,
       sameDayCheckIn: !!job.sameDayCheckIn,
+      payoutAmount: status === "COMPLETED" ? parsePriceAmount(job.payout) : null,
     },
   });
 

@@ -81,6 +81,9 @@ export function serializeVisit(v: Visit) {
     endedAt: v.endedAt ? v.endedAt.getTime() : null,
     note: v.note,
     sameDayCheckIn: v.sameDayCheckIn,
+    payoutAmount: v.payoutAmount,
+    payoutPaid: v.payoutPaid,
+    payoutPaidAt: v.payoutPaidAt ? v.payoutPaidAt.getTime() : null,
     createdAt: v.createdAt.getTime(),
   };
 }

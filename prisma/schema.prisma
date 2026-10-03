@@ -151,6 +151,14 @@ model Visit {
   endedAt        DateTime?
   note           String?
   sameDayCheckIn Boolean     @default(false)
+  // Snapshot of the job's payout at the moment this visit was completed —
+  // not a live lookup of Job.payout, so a later pay-rate change doesn't
+  // rewrite history. Null means either the visit isn't completed yet, or
+  // the job/employee had no payout figure to snapshot (the owner typed it
+  // in manually some other way, or this visit predates payroll tracking).
+  payoutAmount   Float?
+  payoutPaid     Boolean     @default(false)
+  payoutPaidAt   DateTime?
   createdAt      DateTime    @default(now())
 
   job      Job? @relation(fields: [jobId], references: [id], onDelete: SetNull)

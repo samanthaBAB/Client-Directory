@@ -7,9 +7,12 @@ export default auth((req) => {
   const isLoginPage = pathname.startsWith("/login");
   const isChangePwPage = pathname.startsWith("/change-password");
   const isApiRoute = pathname.startsWith("/api");
-  // The public marketing/sign-up page and its contact-form endpoint — the
-  // whole point is that a stranger with no account can load these.
-  const isPublicMarketingRoute = pathname.startsWith("/get-started");
+  // The public marketing/sign-up page, the privacy policy, and the
+  // contact-form endpoint — the whole point is that a stranger with no
+  // account can load these. The App Store requires the privacy policy URL
+  // to open without signing in.
+  const isPublicMarketingRoute =
+    pathname.startsWith("/get-started") || pathname === "/privacy" || pathname === "/privacy/";
   const isContactApiRoute = pathname.startsWith("/api/contact");
 
   if (!isLoggedIn && isApiRoute && !isContactApiRoute) {
